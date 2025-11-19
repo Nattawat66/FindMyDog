@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}รายการสุนัขของฉัน{% endblock %} 
+
+{% block content %}
+    <div class="max-w-6xl mx-auto p-8">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-8 border-b pb-3">🐕 สุนัขที่ฉันลงทะเบียนไว้ ({{ dogs.count }})</h1>
+        
+        {% if not has_dogs %}
+            <div class="alert shadow-lg bg-yellow-100 border-yellow-400">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info flex-shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>คุณยังไม่ได้ลงทะเบียนสุนัขไว้เลย!</span>
+                <div>
+                    <a href="{% url 'register_dog_page' %}" class="btn btn-sm btn-primary">ลงทะเบียนสุนัขตัวใหม่</a>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for dog in dogs %}
+                <div class="card card-compact w-full bg-base-100 shadow-xl border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
+                    
+                    {% with primary_image=dog.images.first %}
+                        {% if primary_image %}
+                            <figure class="h-48 overflow-hidden">
+                                <img src="{{ primary_image.image.url }}" alt="{{ dog.name }}" class="object-cover w-full h-full"/>
+                            </figure>
+                        {% else %}
+                            <figure class="h-48 bg-gray-200 flex items-center justify-center">
+                                <span class="text-gray-500">ไม่มีรูปภาพ</span>
+                            </figure>
+                        {% endif %}
+                    {% endwith %}
+
+                    <div class="card-body">
+                        <h2 class="card-title text-2xl text-primary-blue-custom">{{ dog.name }}</h2>
+                        <p class="text-sm text-gray-600">
+                            **สายพันธุ์:** {{ dog.breed|default:"-" }} | 
+                            **เพศ:** {{ dog.get_gender_display|default:"-" }}
+                        </p>
+                        <p class="text-sm">
+                            **สถานะ:** {% if dog.is_lost %}
+                                <span class="badge badge-error text-white">🐕 หาย (LOST)</span>
+                            {% else %}
+                                <span class="badge badge-success text-white">🏠 อยู่กับเจ้าของ</span>
+                            {% endif %}
+                        </p>
+                        <div class="card-actions justify-end mt-4">
+                            <a href="{% url 'dog_detail' dog.id %}" class="btn btn-sm btn-info text-white">ดูรายละเอียด</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

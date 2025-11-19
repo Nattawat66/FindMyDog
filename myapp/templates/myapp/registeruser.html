@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="lofi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find my dog - สมัครสมาชิก (DaisyUI)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+    <script>
+        // กำหนดค่าสีที่ใช้ Tailwind Custom Utility เพื่อให้สีปุ่มและพื้นหลังตรงกับธีมของคุณ
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue-custom': '#3B82F6', 
+                        'secondary-gray-custom': '#4B5563', 
+                        'background-start': '#3730A3', 
+                        'background-end': '#4F46E5',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* สไตล์เพิ่มเติมสำหรับจำลองไอคอนสุนัข */
+        .dog-icon::before {
+            content: '🐕';
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-background-start to-background-end h-screen flex items-center justify-center p-4">
+
+    <div class="card bg-base-100 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden p-6">
+        
+        <header class="pb-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-800 flex items-center dog-icon">Find my dog</h1>
+        </header>
+
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">สมัครสมาชิก</h2>
+
+        {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form action="{% url 'register' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            
+            <div class="form-control">
+                <label class="label"><span class="label-text">ชื่อผู้ใช้งาน</span></label>
+                <input type="text" name="username" placeholder="Username" 
+                       class="input input-bordered w-full" required />
+            </div>
+
+            <div class="form-control">
+                <label class="label"><span class="label-text">อีเมล</span></label>
+                <input type="email" name="email" placeholder="example@company.com" 
+                       class="input input-bordered w-full" required />
+            </div>
+
+            <div class="form-control">
+                <label class="label"><span class="label-text">รหัสผ่าน</span></label>
+                <div class="relative">
+                    <input type="password" name="password" placeholder="********"
+                           class="input input-bordered w-full pr-10" required />
+                    <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.269 2.943 9.542 7-1.273 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-control">
+                <label class="label"><span class="label-text">ยืนยันรหัสผ่าน</span></label>
+                <div class="relative">
+                    <input type="password" name="password_confirm" placeholder="********"
+                           class="input input-bordered w-full pr-10" required />
+                    <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.269 2.943 9.542 7-1.273 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+
+            <button type="submit" 
+                    class="btn w-full text-white bg-secondary-gray-custom hover:bg-gray-700 border-none mt-6">
+                สมัครสมาชิก
+            </button>
+
+            <a href="{% url 'login' %}" 
+               class="btn w-full text-white bg-primary-blue-custom hover:bg-blue-600 border-none">
+                เข้าสู่ระบบ
+            </a>
+        </form>
+        
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}ลงทะเบียนข้อมูลสุนัข{% endblock %} 
+
+{% block extra_head %}
+<style>
+    /* ปรับแต่ง Dropzone ให้เข้ากับ DaisyUI */
+    .dropzone {
+        border: 2px dashed #3B82F6;
+        border-radius: 0.5rem;
+        background: #f9fafb;
+        min-height: 200px;
+        padding: 2rem;
+        cursor: pointer;
+        position: relative;
+    }
+    .dropzone.dz-drag-hover {
+        border-color: #2563eb;
+        background: #eff6ff;
+    }
+    .dropzone.dz-clickable {
+        cursor: pointer;
+    }
+    .dropzone.dz-clickable * {
+        cursor: pointer;
+    }
+    .dz-preview {
+        margin: 0.5rem;
+        display: inline-block;
+        position: relative;
+    }
+    .dz-preview .dz-image {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    .dz-preview .dz-remove {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ef4444;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 14px;
+        z-index: 10;
+    }
+    .dz-preview .dz-remove:hover {
+        background: #dc2626;
+    }
+    .dz-message {
+        text-align: center;
+        margin: 2rem 0;
+        pointer-events: none;
+    }
+    .dz-message p {
+        margin-bottom: 1rem;
+    }
+    .dz-message .dz-button {
+        background: #3B82F6;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        pointer-events: auto;
+    }
+    .dz-message .dz-button:hover {
+        background: #2563eb;
+    }
+    /* ซ่อน preview ของ Dropzone เอง เพราะเราจะใช้ preview ของเราเอง */
+    .dz-preview {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+    <div class="max-w-4xl mx-auto bg-white p-8 shadow-xl rounded-xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">🐶 ลงทะเบียนข้อมูลสุนัข</h1>
+        
+        {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mb-2">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <form method="post" enctype="multipart/form-data" id="dog-form" class="space-y-8">
+            {% csrf_token %}
+
+            <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">ข้อมูลพื้นฐาน</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control">{{ form.name.label_tag }}{{ form.name }}</div>
+                    <div class="form-control">{{ form.breed.label_tag }}{{ form.breed }}</div>
+                    <div class="form-control">{{ form.age.label_tag }}{{ form.age }}</div>
+                    
+                    <div class="form-control">
+                        <label class="label">{{ form.gender.label }}</label>
+                        {{ form.gender }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">ลักษณะทางกายภาพ</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="form-control">{{ form.primary_color.label_tag }}{{ form.primary_color }}</div>
+                    <div class="form-control">{{ form.secondary_color.label_tag }}{{ form.secondary_color }}</div>
+                    
+                    <div class="form-control">
+                        <label class="label">{{ form.size.label }}</label>
+                        {{ form.size }}
+                    </div>
+
+                    <div class="form-control">{{ form.weight.label_tag }}{{ form.weight }}</div>
+                    
+                    <div class="form-control md:col-span-3">
+                        {{ form.distinguishing_marks.label_tag }}
+                        {{ form.distinguishing_marks }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">นิสัยและสุขภาพ</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control">{{ form.personality.label_tag }}{{ form.personality }}</div>
+                    <div class="form-control">{{ form.favorite_food.label_tag }}{{ form.favorite_food }}</div>
+                    <div class="form-control">{{ form.allergies.label_tag }}{{ form.allergies }}</div>
+                </div>
+                <div class="form-control mt-4">
+                    <label class="label cursor-pointer justify-start gap-3">
+                        {{ form.is_lost }}
+                        <span class="label-text text-lg">{{ form.is_lost.label }} (หากสุนัขหายแล้ว)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">รูปภาพสุนัข (สูงสุด 5 รูป)</h2>
+                
+                {# Dropzone Area #}
+                <div id="dropzone-area" class="dropzone">
+                    <div class="dz-message">
+                        <p class="text-lg text-gray-600 mb-2">ลากและวางรูปภาพที่นี่ หรือคลิกเพื่อเลือกไฟล์</p>
+                    </div>
+                </div>
+                
+                {# Hidden formset สำหรับเก็บข้อมูลรูปภาพ #}
+                <div id="formset-container" style="display: none;">
+                {{ formset.management_form }}
+                    <div id="formset-forms"></div>
+                </div>
+                
+                {# Preview area #}
+                <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+            </div>
+
+            <button type="submit" 
+                    class="btn btn-lg w-full text-white bg-primary-blue-custom hover:bg-blue-600 border-none">
+                บันทึกข้อมูลสุนัข
+            </button>
+        </form>
+        
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// รอให้ Dropzone โหลดเสร็จก่อน
+function initDropzone() {
+    // ตรวจสอบว่า Dropzone โหลดแล้วหรือยัง
+    if (typeof Dropzone === 'undefined') {
+        console.log('Waiting for Dropzone.js to load...');
+        setTimeout(initDropzone, 100);
+        return;
+    }
+    
+    console.log('Dropzone.js loaded, initializing...');
+    
+    // ปิดการใช้งาน auto-discover ของ Dropzone
+    Dropzone.autoDiscover = false;
+    
+    // ตรวจสอบว่า element มีอยู่จริง
+    const dropzoneElement = document.getElementById('dropzone-area');
+    if (!dropzoneElement) {
+        console.error('Dropzone element not found');
+        return;
+    }
+    
+    // ตรวจสอบว่า element นี้มี Dropzone instance อยู่แล้วหรือไม่
+    if (dropzoneElement.dropzone) {
+        console.log('Dropzone already initialized, destroying old instance...');
+        dropzoneElement.dropzone.destroy();
+    }
+    
+    // เก็บไฟล์ที่อัพโหลด
+    let uploadedFiles = [];
+    const maxFiles = 5;
+    
+    // สร้าง Dropzone instance
+    let dropzone;
+    try {
+        dropzone = new Dropzone("#dropzone-area", {
+            url: "#", // ไม่ใช้ auto-upload
+            autoProcessQueue: false,
+            addRemoveLinks: false,
+            maxFiles: maxFiles,
+            acceptedFiles: "image/*",
+            dictDefaultMessage: "",
+            dictMaxFilesExceeded: `คุณสามารถอัพโหลดได้สูงสุด ${maxFiles} รูป`,
+            clickable: true, // เปิดใช้งานการคลิก
+            init: function() {
+                const dz = this;
+                console.log('Dropzone initialized successfully');
+                
+                // เมื่อเพิ่มไฟล์
+                dz.on("addedfile", function(file) {
+                    console.log('File added:', file.name);
+                    if (uploadedFiles.length >= maxFiles) {
+                        dz.removeFile(file);
+                        alert(`คุณสามารถอัพโหลดได้สูงสุด ${maxFiles} รูป`);
+                        return;
+                    }
+                    
+                    uploadedFiles.push(file);
+                    updateFormset();
+                    updatePreview();
+                });
+                
+                // เมื่อลบไฟล์
+                dz.on("removedfile", function(file) {
+                    console.log('File removed:', file.name);
+                    uploadedFiles = uploadedFiles.filter(f => f !== file);
+                    updateFormset();
+                    updatePreview();
+                });
+                
+                // เมื่อมี error
+                dz.on("error", function(file, message) {
+                    console.error('Dropzone error:', message);
+                    alert('เกิดข้อผิดพลาด: ' + message);
+                });
+                
+                // เมื่อคลิก
+                dz.on("click", function() {
+                    console.log('Dropzone clicked');
+                });
+            }
+        });
+        console.log('Dropzone instance created:', dropzone);
+    } catch (error) {
+        console.error('Error creating Dropzone:', error);
+        alert('เกิดข้อผิดพลาดในการสร้าง Dropzone: ' + error.message);
+        return;
+    }
+    
+    
+    // อัพเดต FormSet
+    function updateFormset() {
+        const formsetContainer = document.getElementById('formset-container');
+        const formsetForms = document.getElementById('formset-forms');
+        const managementForm = formsetContainer.querySelector('[name$="-TOTAL_FORMS"]');
+        const initialForm = formsetContainer.querySelector('[name$="-INITIAL_FORMS"]');
+        const minNumForm = formsetContainer.querySelector('[name$="-MIN_NUM_FORMS"]');
+        const maxNumForm = formsetContainer.querySelector('[name$="-MAX_NUM_FORMS"]');
+        
+        // ล้าง formset forms
+        formsetForms.innerHTML = '';
+        
+        // สร้าง form สำหรับแต่ละไฟล์
+        uploadedFiles.forEach((file, index) => {
+            const formDiv = document.createElement('div');
+            formDiv.innerHTML = `
+                <input type="file" name="images-${index}-image" id="id_images-${index}-image" style="display: none;">
+            `;
+            formsetForms.appendChild(formDiv);
+            
+            // ใส่ไฟล์เข้าไปใน input
+            const fileInput = formDiv.querySelector('input[type="file"]');
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+        });
+        
+        // อัพเดต TOTAL_FORMS
+        if (managementForm) {
+            managementForm.value = uploadedFiles.length;
+        }
+        
+        // อัพเดต INITIAL_FORMS, MIN_NUM_FORMS, MAX_NUM_FORMS ถ้ามี
+        if (initialForm) initialForm.value = 0;
+        if (minNumForm) minNumForm.value = 0;
+        if (maxNumForm) maxNumForm.value = maxFiles;
+    }
+    
+    // อัพเดต Preview
+    function updatePreview() {
+        const previewContainer = document.getElementById('image-preview');
+        previewContainer.innerHTML = '';
+        
+        uploadedFiles.forEach((file, index) => {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'relative';
+            
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.className = 'w-full h-32 object-cover rounded-md border';
+            img.alt = `Preview ${index + 1}`;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = function() {
+                dropzone.removeFile(file);
+            };
+            
+            previewDiv.appendChild(img);
+            previewDiv.appendChild(removeBtn);
+            previewContainer.appendChild(previewDiv);
+        });
+    }
+    
+    // เมื่อ submit form
+    const dogForm = document.getElementById('dog-form');
+    if (dogForm) {
+        dogForm.addEventListener('submit', function(e) {
+            // อัพเดต formset ก่อน submit
+            updateFormset();
+            
+            // ตรวจสอบว่ามีไฟล์หรือไม่
+            if (uploadedFiles.length === 0) {
+                // ถ้าไม่มีไฟล์ก็ให้ submit ได้ (ไม่บังคับ)
+            }
+        });
+    }
+}
+
+// เริ่มต้นเมื่อ DOM พร้อม
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDropzone);
+} else {
+    initDropzone();
+}
+</script>
+{% endblock %}

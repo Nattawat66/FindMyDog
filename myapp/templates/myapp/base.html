@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="lofi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Find my dog{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <!-- Dropzone.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" />
+    <script>
+        // กำหนดค่าสีที่ใช้ Tailwind Custom Utility (ตามที่คุณเคยใช้)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue-custom': '#3B82F6', 
+                        'secondary-gray-custom': '#4B5563', 
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* สไตล์เพิ่มเติมสำหรับจำลองไอคอนสุนัข */
+        .dog-icon::before {
+            content: '🐕';
+            margin-right: 0.5rem;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <nav class="navbar bg-base-200 shadow-md">
+        <div class="container mx-auto max-w-7xl">
+            <div class="flex-1">
+                <a href="{% url 'home' %}" class="btn btn-ghost text-xl font-bold flex items-center dog-icon text-gray-800">
+                    Find my dog
+                </a>
+            </div>
+
+            <div class="flex-none">
+                <ul class="menu menu-horizontal px-1">
+                    <li><a href="{% url 'home' %}">หน้าหลัก</a></li>
+                    <li><a href="#">ตามหาน้องหมา</a></li>
+                    <li><a href="#">รายงานพบ</a></li>
+                </ul>
+
+                {% if user.is_authenticated %}
+                    <div class="dropdown dropdown-end ml-4">
+                        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                            <div class="w-10 rounded-full bg-primary-blue-custom text-white flex items-center justify-center">
+                                {{ user.username.0|upper }}
+                            </div>
+                        </div>
+                        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a href="#">โปรไฟล์</a></li>
+                            <li><a href="{% url 'dog_list' %}">สุนัขของฉัน</a></li>
+                            <li><a href="#">ตั้งค่า</a></li>
+                            <li>
+                                <form action="{% url 'logout' %}" method="post" class="w-full">
+                                    {% csrf_token %} 
+                                    <button type="submit" class="w-full text-left ">ออกจากระบบ</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="space-x-2 ml-4">
+                        <a href="{% url 'login' %}" class="btn btn-sm text-white bg-primary-blue-custom hover:bg-blue-600 border-none">
+                            เข้าสู่ระบบ
+                        </a>
+                        <a href="{% url 'register' %}" class="btn btn-sm text-white bg-secondary-gray-custom hover:bg-gray-700 border-none">
+                            สมัครสมาชิก
+                        </a>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </nav>
+    <div class="container mx-auto max-w-7xl px-4 py-8">
+        {% block content %}
+            {% endblock %}
+    </div>
+    
+    <!-- Dropzone.js JS - โหลดท้ายสุด -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+    {% block extra_scripts %}{% endblock %}
+    </body>
+</html>
