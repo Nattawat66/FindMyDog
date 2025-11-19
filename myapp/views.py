@@ -200,7 +200,7 @@ def login(request):
     
     return render(request, 'myapp/loginuser.html')
 
-
+@login_required
 def home(request):
     return render(request, 'myapp/home.html')
 
