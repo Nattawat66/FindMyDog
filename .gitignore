@@ -1,0 +1,6 @@
+# ไฟล์ที่ผู้ใช้ระบุว่าไม่ต้องการนำขึ้น Git
+.python-version
+README.md
+main.py
+pyproject.toml
+uv.lock
