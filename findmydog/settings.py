@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     'theme',
     # 'django_browser_reload',
 ]
-TAILWIND_APP_NAME = 'theme'
 MEDIA_ROOT = os.path.join(BASE_DIR,'dog_images')
 MEDIA_URL = '/dog_images/'
 
