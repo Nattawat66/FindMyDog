@@ -1,0 +1,38 @@
+<div class="bg-base-100 rounded-xl">
+  <div class="bg-purple-600 text-white p-6 flex justify-between items-center">
+    <h3 class="text-2xl font-bold">{{ notification.title }}</h3>
+    <form method="dialog">
+      <button class="btn btn-sm btn-circle btn-ghost text-white">✕</button>
+    </form>
+  </div>
+
+  <div class="p-6">
+    {% if notification.image %}
+    <img
+      src="{{ notification.image.url }}"
+      alt="{{ notification.title }}"
+      class="w-full h-auto rounded-lg mb-4 object-cover"
+    />
+    {% endif %}
+
+    <p class="text-gray-500 text-sm mb-4">
+      <span class="font-semibold">ประเภท:</span> 
+      {{notification.get_notification_type_display }} | 
+      <span class="font-semibold">วันที่:</span> 
+      {{notification.created_at|date:"d M Y เวลา H:i" }}
+    </p>
+
+    <p class="whitespace-pre-wrap text-gray-800">{{ notification.content }}</p>
+
+    {% if notification.dog %}
+    <div class="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+      <p class="font-semibold">สุนัขที่เกี่ยวข้อง:</p>
+      <a
+        href="{% url 'dog_detail' notification.dog.pk %}"
+        class="link link-hover text-primary-blue-custom"
+        >{{ notification.dog.name }}</a
+      >
+    </div>
+    {% endif %}
+  </div>
+</div>
