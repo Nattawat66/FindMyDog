@@ -1,5 +1,13 @@
-{% extends "base.html" %} {% load static %} {% block title %}{{ title }}{%
-endblock %} {% block content %}
+{% extends "base.html" %} 
+{% load static %} 
+{% block title %}
+  {{ title }}
+{%endblock %} 
+{% block extra_head %}
+<!-- Dropzone Custom CSS -->
+<link rel="stylesheet" href="{% static 'dropzone-custom.css' %}" />
+{% endblock %}
+{% block content %}
 <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
   <header
     class="text-center mb-10 bg-indigo-500 rounded-xl p-8 text-white shadow-xl"
@@ -11,7 +19,7 @@ endblock %} {% block content %}
   </header>
 
   <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl border border-gray-100">
-    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+    <form method="POST" enctype="multipart/form-data" id="notification-form" class="space-y-6" >
       {% csrf_token %}
 
       <div class="card bg-base-100 border border-base-200 shadow-md">
@@ -26,10 +34,9 @@ endblock %} {% block content %}
                 >หัวข้อประกาศ (Title)*</span
               ></label
             >
-            {{ form.title }} {% if form.title.errors %}<span
-              class="text-error text-sm mt-1"
-              >{{ form.title.errors }}</span
-            >{% endif %}
+            {{ form.title }} {% if form.title.errors %}
+              <span class="text-error text-sm mt-1">{{ form.title.errors }}</span
+            {% endif %}
           </div>
 
           <div class="form-control">
@@ -50,35 +57,33 @@ endblock %} {% block content %}
                 >{{ form.notification_type.label }}*</span
               ></label
             >
-            {{ form.notification_type }} {% if form.notification_type.errors
-            %}<span class="text-error text-sm mt-1"
-              >{{ form.notification_type.errors }}</span
-            >{% endif %}
+            {{ form.notification_type }} 
+            {% if form.notification_type.errors%}
+            <span class="text-error text-sm mt-1">{{ form.notification_type.errors }}</span>
+            {% endif %}
           </div>
         </div>
       </div>
+    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+      <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">
+        รูปภาพประกอบ (ถ้ามี)
+      </h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="card bg-base-100 border border-base-200 shadow-md">
-          <div class="card-body p-6">
-            <h2 class="card-title text-lg text-indigo-700">🖼️ รูปภาพ</h2>
-            <div class="form-control">
-              <label class="label"
-                ><span class="label-text">{{ form.image.label }}</span></label
-              >
-              <input
-                type="file"
-                name="{{ form.image.name }}"
-                id="{{ form.image.id_for_label }}"
-                class="file-input file-input-bordered w-full"
-                accept="image/*"
-              />
-              {% if form.image.errors %}<span class="text-error text-sm mt-1"
-                >{{ form.image.errors }}</span
-              >{% endif %}
-            </div>
-          </div>
+      {# Dropzone Area สำหรับรูปเดียว #}
+      <div id="dropzone-area" class="dropzone">
+        <div class="dz-message">
+          <p class="text-lg text-gray-600 mb-2">
+            ลากและวางรูปภาพที่นี่ หรือคลิกเพื่อเลือกไฟล์
+          </p>
         </div>
+      </div>
+
+      {# Hidden input สำหรับเก็บรูปภาพ #}
+      <input type="file" name="image" id="id_image" accept="image/*" style="display: none;">
+
+      {# Preview area #}
+      <div id="image-preview" class="mt-4"></div>
+    </div>
 
         <div class="card bg-base-100 border border-base-200 shadow-md">
           <div class="card-body p-6">
@@ -116,10 +121,15 @@ endblock %} {% block content %}
         </div>
       </div>
 
-      <div class="mt-8">
+      <div class="mt-8 flex gap-2 {% if is_edit_mode %}justify-end{% else %}justify-center{% endif %}">
+        {% if is_edit_mode %}
+        <a href="{% url 'notification_list' %}" class="btn btn-outline btn-error">
+          ยกเลิก
+        </a>
+        {% endif %}
         <button
           type="submit"
-          class="btn btn-primary btn-block btn-lg shadow-lg"
+          class="btn btn-primary btn-lg shadow-lg"
         >
           {{ submit_text }}
         </button>
@@ -127,4 +137,130 @@ endblock %} {% block content %}
     </form>
   </div>
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<!-- Dropzone.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+<!-- Dropzone Custom CSS -->
+<link rel="stylesheet" href="{% static 'dropzone-custom.css' %}">
+<script>
+// Dropzone สำหรับรูปเดียว (Notification image field)
+function initNotificationDropzone() {
+  if (typeof Dropzone === 'undefined') {
+    setTimeout(initNotificationDropzone, 100);
+    return;
+  }
+  
+  Dropzone.autoDiscover = false;
+  
+  const dropzoneElement = document.getElementById('dropzone-area');
+  if (!dropzoneElement) {
+    console.error('Dropzone element not found');
+    return;
+  }
+  
+  if (dropzoneElement.dropzone) {
+    dropzoneElement.dropzone.destroy();
+  }
+  
+  const fileInput = document.getElementById('id_image');
+  const previewContainer = document.getElementById('image-preview');
+  
+  let uploadedFile = null;
+  
+  const dropzone = new Dropzone("#dropzone-area", {
+    url: "#",
+    autoProcessQueue: false,
+    addRemoveLinks: false,
+    maxFiles: 1,
+    acceptedFiles: "image/*",
+    dictDefaultMessage: "",
+    dictMaxFilesExceeded: "คุณสามารถอัพโหลดได้เพียง 1 รูป",
+    clickable: true,
+    init: function() {
+      const dz = this;
+      
+      // เมื่อเพิ่มไฟล์
+      dz.on("addedfile", function(file) {
+        // ลบไฟล์เก่าถ้ามี
+        if (uploadedFile && uploadedFile !== file) {
+          dz.removeFile(uploadedFile);
+        }
+        
+        uploadedFile = file;
+        
+        // ใส่ไฟล์เข้าไปใน input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        
+        // อัพเดต preview
+        updatePreview();
+      });
+      
+      // เมื่อลบไฟล์
+      dz.on("removedfile", function(file) {
+        if (uploadedFile === file) {
+          uploadedFile = null;
+          fileInput.value = '';
+          updatePreview();
+        }
+      });
+      
+      // เมื่อมี error
+      dz.on("error", function(file, message) {
+        console.error('Dropzone error:', message);
+        alert('เกิดข้อผิดพลาด: ' + message);
+      });
+    }
+  });
+  
+  // อัพเดต Preview
+  function updatePreview() {
+    previewContainer.innerHTML = '';
+    
+    if (uploadedFile) {
+      const previewDiv = document.createElement('div');
+      previewDiv.className = 'relative inline-block';
+      
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(uploadedFile);
+      img.className = 'w-full max-w-md h-64 object-cover rounded-md border';
+      img.alt = 'Preview';
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600';
+      removeBtn.innerHTML = '×';
+      removeBtn.onclick = function() {
+        dropzone.removeFile(uploadedFile);
+      };
+      
+      previewDiv.appendChild(img);
+      previewDiv.appendChild(removeBtn);
+      previewContainer.appendChild(previewDiv);
+    }
+  }
+  
+  // ถ้ามีรูปเดิม (edit mode) ให้แสดง
+  {% if form.instance.image %}
+    const existingImageUrl = "{{ form.instance.image.url }}";
+    if (existingImageUrl) {
+      previewContainer.innerHTML = `
+        <div class="relative inline-block">
+          <img src="${existingImageUrl}" alt="รูปปัจจุบัน" class="w-full max-w-md h-64 object-cover rounded-md border">
+          <p class="text-sm text-gray-500 mt-2">รูปภาพปัจจุบัน (อัพโหลดรูปใหม่เพื่อแทนที่)</p>
+        </div>
+      `;
+    }
+  {% endif %}
+}
+
+// เริ่มต้นเมื่อ DOM พร้อม
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initNotificationDropzone);
+} else {
+  initNotificationDropzone();
+}
+</script>
 {% endblock %}

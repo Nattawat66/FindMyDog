@@ -314,14 +314,16 @@ def notification_list_view(request):
         org_dog_pks = []
     # 3. รวม QuerySets
     notifications = Notification.objects.filter(
-        # เงื่อนไข 1: เป็นข่าวสารทั่วไป (ACTIVITY หรือ LOST_DOG)
+        # เงื่อนไข 1: ACTIVITY หรือ LOST_DOG (ข่าวสารทั่วไป)
         models.Q(notification_type__in=['ACTIVITY', 'LOST_DOG']) |
-        
-        # เงื่อนไข 2: เป็นข่าวสารเฉพาะสุนัข และสุนัขนั้นถูกผู้ใช้รับดูแล
-        (models.Q(notification_type='DOG_SPECIFIC') & models.Q(dog__pk__in=adopted_dogs_pks))|
-        
-        (models.Q(notification_type='DOG_SPECIFIC') & Q(dog__pk__in=org_dog_pks))
+
+        # เงื่อนไข 2: DOG_SPECIFIC ที่เกี่ยวกับสุนัขที่ผู้ใช้อุปการะ
+        (models.Q(notification_type='DOG_SPECIFIC') & models.Q(dog__pk__in=adopted_dogs_pks)) |
+
+        # เงื่อนไข 3: DOG_SPECIFIC ที่เกี่ยวกับสุนัขในองค์กรของผู้ใช้
+        (models.Q(notification_type='DOG_SPECIFIC') & models.Q(dog__pk__in=org_dog_pks))
     ).order_by('-created_at')
+
     # 💡 [เงื่อนไขใหม่สำหรับ Admin] ข่าวสารเฉพาะสุนัข สำหรับ Admin องค์กร
         # ให้นำไปกรองจากสุนัขทั้งหมดในความดูแลของ Admin คนนั้น (org_dog_pks)
     
@@ -341,10 +343,23 @@ def notification_detail_hx_view(request, notification_id):
     # 💡 ใช้ get_object_or_404 เพื่อจัดการถ้าไม่พบ
     notification = get_object_or_404(Notification, pk=notification_id)
 
-    # 💡 [การจัดการสิทธิ์]: อาจต้องมีการตรวจสอบสิทธิ์ที่นี่อีกครั้งก่อนแสดงรายละเอียด
+    # 💡 [การจัดการสิทธิ์]: ตรวจสอบสิทธิ์แก้ไข/ลบ
+    can_edit = False
+    can_delete = False
+    
+    # ตรวจสอบว่าเป็นเจ้าของโพสหรือไม่ (organization = request.user)
+    if notification.organization == request.user:
+        can_edit = True
+        can_delete = True
+    # หรือถ้าเป็น super_admin ก็สามารถแก้ไข/ลบได้ทั้งหมด
+    elif request.user.is_staff:
+        can_edit = True
+        can_delete = True
     
     context = {
-        'notification': notification
+        'notification': notification,
+        'can_edit': can_edit,
+        'can_delete': can_delete,
     }
     # 💡 สำคัญ: เรนเดอร์ template เฉพาะส่วน Pop-up
     return render(request, 'myapp/notifications/notification_modal.html', context)
@@ -375,7 +390,7 @@ def create_notification_view(request):
                 return render(request, 'myapp/notifications/notification_form.html', {'form': form})
             
             notification.save()
-            messages.success(request, f"ประกาศ '{notification.title}' ถูกสร้างเรียบร้อยแล้ว!")
+            # messages.success(request, f"ประกาศ '{notification.title}' ถูกสร้างเรียบร้อยแล้ว!")
             return redirect('notification_list') # Redirect ไปหน้ารายการข่าวสาร
     else:
         # 💡 ส่ง request.user เข้าไปในฟอร์ม
@@ -388,3 +403,64 @@ def create_notification_view(request):
         'submit_text': "เผยแพร่ประกาศ",
     }
     return render(request, 'myapp/notifications/notification_form.html', context)
+
+
+@login_required
+def edit_notification_view(request, notification_id):
+    # ตรวจสอบสิทธิ์: ต้องเป็นเจ้าของโพสหรือ super_admin
+    notification = get_object_or_404(Notification, pk=notification_id)
+    
+    # ตรวจสอบสิทธิ์
+    if notification.organization != request.user and not request.user.is_staff:
+        messages.error(request, "คุณไม่มีสิทธิ์ในการแก้ไขประกาศนี้")
+        return redirect('notification_list')
+    
+    if request.method == 'POST':
+        form = NotificationForm(request.POST, request.FILES, instance=notification, user=request.user)
+        if form.is_valid():
+            notification = form.save(commit=False)
+            
+            # ตรวจสอบว่าถ้าเลือกประเภท DOG_SPECIFIC แต่ไม่ได้เลือก Dog ให้เป็น Invalid
+            if notification.notification_type == 'DOG_SPECIFIC' and not notification.dog:
+                messages.error(request, "ประกาศเฉพาะสุนัข ต้องระบุสุนัขที่เกี่ยวข้อง")
+                context = {
+                    'form': form,
+                    'is_edit_mode': True,
+                    'title': "แก้ไขประกาศข่าวสาร",
+                    'submit_text': "บันทึกการแก้ไข",
+                }
+                return render(request, 'myapp/notifications/notification_form.html', context)
+            
+            notification.save()
+            messages.success(request, f"แก้ไขประกาศ '{notification.title}' สำเร็จแล้ว!")
+            return redirect('notification_list')
+    else:
+        form = NotificationForm(instance=notification, user=request.user)
+    
+    context = {
+        'form': form,
+        'is_edit_mode': True,
+        'title': "แก้ไขประกาศข่าวสาร",
+        'submit_text': "บันทึกการแก้ไข",
+    }
+    return render(request, 'myapp/notifications/notification_form.html', context)
+
+
+@login_required
+def delete_notification_view(request, notification_id):
+    # ตรวจสอบสิทธิ์: ต้องเป็นเจ้าของโพสหรือ super_admin
+    notification = get_object_or_404(Notification, pk=notification_id)
+    
+    # ตรวจสอบสิทธิ์
+    if notification.organization != request.user and not request.user.is_staff:
+        messages.error(request, "คุณไม่มีสิทธิ์ในการลบประกาศนี้")
+        return redirect('notification_list')
+    
+    if request.method == 'POST':
+        notification_title = notification.title
+        notification.delete()
+        messages.success(request, f"ลบประกาศ '{notification_title}' สำเร็จแล้ว!")
+        return redirect('notification_list')
+    
+    # ถ้าเป็น GET request ให้ redirect กลับไปหน้า list
+    return redirect('notification_list')

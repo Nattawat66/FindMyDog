@@ -18,37 +18,42 @@
     >
       <figure class="h-48 overflow-hidden w-48 flex-shrink-0">
         {% if note.dog %} {# ถ้าเป็นข่าวสารของสุนัข ให้แสดงรูปภาพของสุนัข #}
-            {%with primary_image=note.dog.images.first %} {% if primary_image %}
-            <img
-            src="{{ primary_image.image.url }}"
-            alt="{{ note.dog.name }}"
-            class="object-cover w-full h-full"
-            />
-        {% else %}
-            <div class="h-full bg-gray-200 flex items-center justify-center">
-            <span class="text-gray-500">ไม่มีรูปภาพ</span>
-            </div>
-        {% endif %} 
-
-        {% endwith %} 
-        {% elif note.image %} 
-        {#ถ้าเป็นข่าวสารปกติให้แสดงรูปภาพจาก notification.image #}
-            <img
+          {%with primary_image=note.dog.images.first %} 
+            {% if primary_image %}
+              <img
+                src="{{ primary_image.image.url }}"
+                alt="{{ note.dog.name }}"
+                class="object-cover w-full h-full"
+              />
+            {% else %}
+              <div class="h-full bg-gray-200 flex items-center justify-center">
+                <span class="text-gray-500">ไม่มีรูปภาพ</span>
+              </div>
+            {% endif %} 
+          {% endwith %} 
+        {% elif note.image %}
+          {#ถ้าเป็นข่าวสารปกติให้แสดงรูปภาพจาก notification.image #}
+          <img
             src="{{ note.image.url }}"
             alt="{{ note.title }}"
             class="object-cover w-full h-full"
-            />
+          />
         {% else %} {# ถ้าไม่มีรูปภาพเลย #}
-            <div class="h-full bg-gray-200 flex items-center justify-center">
+          <div class="h-full bg-gray-200 flex items-center justify-center">
             <span class="text-gray-500">ไม่มีรูปภาพ</span>
-            </div>
+          </div>
         {% endif %}
       </figure>
       <div class="card-body py-0">
         <div class="flex items-center space-x-3">
           <span class="text-xl">
-            {% if note.notification_type == 'ACTIVITY' %} 🎉 
-            {% elif note.notification_type == 'LOST_DOG' %} 🆘 {% else %} 📝 {% endif %}
+            {% if note.notification_type == 'ACTIVITY' %} 
+              🎉 
+            {% elif note.notification_type == 'LOST_DOG' %} 
+              🆘 
+            {% else %} 
+              📝 
+            {% endif %}
           </span>
 
           <h2 class="card-title text-lg font-semibold truncate">
