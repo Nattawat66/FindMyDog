@@ -88,7 +88,7 @@ def dog_detail(request, dog_id):
             formset.save() 
             
             # 4. แสดงข้อความสำเร็จและ Redirect กลับไปหน้าแสดงผล
-            messages.success(request, f'แก้ไขข้อมูลสุนัข "{dog.name}" สำเร็จแล้ว!')
+            # messages.success(request, f'แก้ไขข้อมูลสุนัข "{dog.name}" สำเร็จแล้ว!')
             return redirect('dog_detail', dog_id=dog.id) 
         else:
             # ถ้ามี error ให้อยู่ในโหมดแก้ไข
@@ -167,7 +167,7 @@ def register_dog_page(request):
             formset.save()  # Django FormSet จะจัดการ empty forms ให้เอง
             
             # 3. แสดงข้อความสำเร็จและ Redirect
-            messages.success(request, f'ลงทะเบียนสุนัข "{dog.name}" สำเร็จแล้ว!')
+            # messages.success(request, f'ลงทะเบียนสุนัข "{dog.name}" สำเร็จแล้ว!')
             return redirect('dog_list')
         else:
             # แสดง error messages ถ้ามี
@@ -219,7 +219,7 @@ def register(request):
                 email=email if email else '',
                 password=password
             )
-            messages.success(request, 'สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ')
+            # messages.success(request, 'สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ')
             return redirect('login')
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
@@ -242,7 +242,7 @@ def login(request):
         
         if user is not None:
             auth_login(request, user)
-            messages.success(request, f'ยินดีต้อนรับ {user.username}!')
+            # messages.success(request, f'ยินดีต้อนรับ {user.username}!')
             # Redirect ไปที่หน้าแรกหรือหน้าที่ต้องการ
             # ถ้ามี next parameter ให้ไปที่นั้น ถ้าไม่มีให้ไปที่ home ตาม LOGIN_REDIRECT_URL
             next_url = request.GET.get('next', None)
@@ -294,7 +294,7 @@ def delete_dog_page(request, dog_id):
         # ยืนยันการลบ
         dog_name = dog.name
         dog.delete()
-        messages.success(request, f'ลบสุนัข "{dog_name}" ออกจากระบบสำเร็จแล้ว!')
+        # messages.success(request, f'ลบสุนัข "{dog_name}" ออกจากระบบสำเร็จแล้ว!')
         return redirect('dog_list')
     
     # ถ้าเป็น GET request ให้ redirect กลับไปหน้า detail (modal จะแสดงในหน้า detail)
@@ -432,7 +432,7 @@ def edit_notification_view(request, notification_id):
                 return render(request, 'myapp/notifications/notification_form.html', context)
             
             notification.save()
-            messages.success(request, f"แก้ไขประกาศ '{notification.title}' สำเร็จแล้ว!")
+            # messages.success(request, f"แก้ไขประกาศ '{notification.title}' สำเร็จแล้ว!")
             return redirect('notification_list')
     else:
         form = NotificationForm(instance=notification, user=request.user)
@@ -459,7 +459,7 @@ def delete_notification_view(request, notification_id):
     if request.method == 'POST':
         notification_title = notification.title
         notification.delete()
-        messages.success(request, f"ลบประกาศ '{notification_title}' สำเร็จแล้ว!")
+        # messages.success(request, f"ลบประกาศ '{notification_title}' สำเร็จแล้ว!")
         return redirect('notification_list')
     
     # ถ้าเป็น GET request ให้ redirect กลับไปหน้า list
