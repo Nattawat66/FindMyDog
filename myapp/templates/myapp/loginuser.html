@@ -57,7 +57,6 @@
 
             <form action="{% url 'login' %}" method="POST" class="space-y-4">
                 {% csrf_token %}
-                
                 <div>
                     <label class="label"><span class="label-text">ชื่อผู้ใช้งาน</span></label>
                     <input type="text" name="username" placeholder="username" 

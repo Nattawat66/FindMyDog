@@ -1,0 +1,406 @@
+<!-- Admin Navbar Component -->
+<nav class="bg-white shadow-lg border-r border-gray-200 h-full" x-data="{ 
+    activeSection: 'dashboard',
+    openSections: {
+        aiManagement: false,
+        adminManagement: false,
+        training: false,
+        retrain: false,
+        selector: false,
+        feature: false,
+        performance: false,
+        version: false,
+        dashboard: false,
+        dataset: false,
+        userManagement: false,
+        postManagement: false
+    }
+}">
+    <div class="flex flex-col h-full">
+        <!-- Logo/Header -->
+        <div class="p-6 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-800">Admin Control Panel</h1>
+            <p class="text-sm text-gray-500 mt-1">Find My Dog Management</p>
+        </div>
+
+        <!-- Navigation Menu -->
+        <div class="flex-1 overflow-y-auto py-4">
+            <div class="px-4 space-y-1">
+                
+                <!-- AI Management Dropdown -->
+                <div>
+                    <button @click="openSections.aiManagement = !openSections.aiManagement" 
+                            class="w-full flex items-center justify-between px-4 py-3 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors bg-gray-50">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                            <span class="font-semibold">AI Management</span>
+                        </div>
+                        <svg class="w-4 h-4 transition-transform" :class="{'rotate-180': openSections.aiManagement}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="openSections.aiManagement" x-collapse class="ml-4 mt-2 space-y-1 border-l-2 border-gray-200 pl-4">
+                        
+                                <div>
+                            <button @click="openSections.training = !openSections.training" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Training Scheduler</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.training}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.training" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'auto-schedule'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'auto-schedule'}">
+                                    Set auto training schedule
+                                </a>
+                                <a href="#" @click="activeSection = 'logging'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'logging'}">
+                                    Logging
+                                </a>
+                                <a href="#" @click="activeSection = 'training-alerts'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'training-alerts'}">
+                                    Training alerts
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Retrain Existing Model -->
+                        <div>
+                            <button @click="openSections.retrain = !openSections.retrain" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Retrain Existing Model</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.retrain}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.retrain" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'load-model'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'load-model'}">
+                                    Load older model version
+                                </a>
+                                <a href="#" @click="activeSection = 'fine-tune'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'fine-tune'}">
+                                    Fine-tune
+                                </a>
+                                <a href="#" @click="activeSection = 'auto-backup'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'auto-backup'}">
+                                    Automatic backup
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Model Selector -->
+                        <div>
+                            <button @click="openSections.selector = !openSections.selector" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Model Selector</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.selector}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.selector" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'choose-architecture'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'choose-architecture'}">
+                                    Choose model architecture
+                                </a>
+                                <a href="#" @click="activeSection = 'compare-models'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'compare-models'}">
+                                    Compare models
+                                </a>
+                                <a href="#" @click="activeSection = 'select-default'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'select-default'}">
+                                    Select default model
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Feature & Embedding Update -->
+                        <div>
+                            <button @click="openSections.feature = !openSections.feature" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Feature & Embedding Update</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.feature}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.feature" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'extract-embeddings'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'extract-embeddings'}">
+                                    Extract embeddings
+                                </a>
+                                <a href="#" @click="activeSection = 'save-db'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'save-db'}">
+                                    Save to DB
+                                </a>
+                                <a href="#" @click="activeSection = 'incremental-update'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'incremental-update'}">
+                                    Incremental update
+                                </a>
+                                <a href="#" @click="activeSection = 'consistency-check'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'consistency-check'}">
+                                    Consistency check
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Model Performance Test -->
+                        <div>
+                            <button @click="openSections.performance = !openSections.performance" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Model Performance Test</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.performance}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.performance" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'test-metrics'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'test-metrics'}">
+                                    Test accuracy / F1 / Precision
+                                </a>
+                                <a href="#" @click="activeSection = 'compare-versions'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'compare-versions'}">
+                                    Compare new vs old
+                                </a>
+                                <a href="#" @click="activeSection = 'auto-revert'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'auto-revert'}">
+                                    Auto-revert
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Model Version Control -->
+                        <div>
+                            <button @click="openSections.version = !openSections.version" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Model Version Control</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.version}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.version" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'version-control'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'version-control'}">
+                                    Version Management
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- AI Dashboard -->
+                        <div>
+                            <button @click="openSections.dashboard = !openSections.dashboard" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">AI Dashboard</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.dashboard}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.dashboard" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'ai-dashboard'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'ai-dashboard'}">
+                                    Dashboard Overview
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Dataset Manager -->
+                        <div>
+                            <button @click="openSections.dataset = !openSections.dataset" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Dataset Manager</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.dataset}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.dataset" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'dataset-manager'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'dataset-manager'}">
+                                    Dataset Management
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Management Dropdown -->
+                <div class="mt-4">
+                    <button @click="openSections.adminManagement = !openSections.adminManagement" 
+                            class="w-full flex items-center justify-between px-4 py-3 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors bg-gray-50">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            <span class="font-semibold">Admin Management</span>
+                        </div>
+                        <svg class="w-4 h-4 transition-transform" :class="{'rotate-180': openSections.adminManagement}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="openSections.adminManagement" x-collapse class="ml-4 mt-2 space-y-1 border-l-2 border-gray-200 pl-4">
+                        
+                        <!-- User Management -->
+                        <div>
+                            <button @click="openSections.userManagement = !openSections.userManagement" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">User Management</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.userManagement}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.userManagement" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'user-list'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'user-list'}">
+                                    รายชื่อผู้ใช้
+                                </a>
+                                <a href="#" @click="activeSection = 'add-user'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'add-user'}">
+                                    เพิ่มผู้ใช้
+                                </a>
+                                <a href="#" @click="activeSection = 'edit-user'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'edit-user'}">
+                                    แก้ไขผู้ใช้
+                                </a>
+                                <a href="#" @click="activeSection = 'delete-user'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'delete-user'}">
+                                    ลบผู้ใช้
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Post Management -->
+                        <div>
+                            <button @click="openSections.postManagement = !openSections.postManagement" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Post Management</span>
+                                </div>
+                                <svg class="w-3 h-3 transition-transform" :class="{'rotate-180': openSections.postManagement}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.postManagement" x-collapse class="ml-6 mt-1 space-y-1">
+                                <a href="#" @click="activeSection = 'lost-dog-reports'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'lost-dog-reports'}">
+                                    รายงานสุนัขหาย
+                                </a>
+                                <a href="#" @click="activeSection = 'found-dog-reports'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'found-dog-reports'}">
+                                    รายงานพบสุนัข
+                                </a>
+                                <a href="#" @click="activeSection = 'add-post'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'add-post'}">
+                                    เพิ่มโพสต์
+                                </a>
+                                <a href="#" @click="activeSection = 'edit-post'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'edit-post'}">
+                                    แก้ไขโพสต์
+                                </a>
+                                <a href="#" @click="activeSection = 'delete-post'" 
+                                   class="block px-4 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                                   :class="{'bg-blue-50 text-blue-700': activeSection === 'delete-post'}">
+                                    ลบโพสต์
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-gray-200">
+            {% if user.is_authenticated %}
+            <div class="flex items-center space-x-3 px-2">  
+                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
+                    {% if user.username %}{{ user.username.0|upper }}{% else %}A{% endif %}
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-800">{{ user.username|default:"Admin" }}</p>
+                    <p class="text-xs text-gray-500">Administrator</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
