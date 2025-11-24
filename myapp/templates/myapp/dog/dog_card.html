@@ -1,0 +1,44 @@
+<a href="{% url 'dog_detail' dog.id %}" class="card card-compact bg-base-100 shadow-xl hover:shadow-2xl transition duration-300 relative overflow-hidden group">
+    <figure class="h-48 overflow-hidden">
+        {% with primary_image=dog.images.first %}
+            {% if primary_image %}
+                <figure class="h-48 overflow-hidden">
+                    <img src="{{ primary_image.image.url }}" alt="{{ dog.name }}" class="object-cover w-full h-full"/>
+                </figure>
+            {% else %}
+                <figure class="h-48 bg-gray-200 flex items-center justify-center">
+                    <span class="text-gray-500">ไม่มีรูปภาพ</span>
+                </figure>
+            {% endif %}
+        {% endwith %}
+    </figure>
+    
+    <div class="card-body p-4 pt-6">
+        <div class="flex justify-between items-start">
+            <h2 class="card-title text-xl text-gray-900 truncate">
+                {{ dog.name }} 
+            </h2>
+        </div>
+        
+        <p class="text-sm text-gray-600 mt-1">
+            <span class="font-semibold">พันธุ์:</span> {{ dog.breed|default:'ไม่ระบุ' }} <br>
+            <span class="font-semibold">เพศ:</span> {{ dog.get_gender_display }} <br>
+            <span class="">•</span> 
+            <span class="font-semibold">อายุ:</span> {{ dog.age }} ปี
+            {% if dog.organization %}
+                <div class="badge badge-info">
+                    <span class="tooltip" data-tip="อยู่ภายใต้การดูแลขององค์กร">
+                        🏘️ โฮงเกลือหมา
+                    </span>
+                </div>
+            {% endif %}
+            {% if dog.vaccination_history %}
+                <div class="badge badge-success">💉 มีประวัติวัคซีน</div>
+            {% endif %}
+            {% if dog.is_lost %}
+                <div class="badge badge-error">สูญหาย</div>
+            {% endif %}
+        </p>
+    
+    </div>
+</a>

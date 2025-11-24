@@ -1,0 +1,180 @@
+{% extends "base.html" %} {% load static %} {% block title%}
+ลงทะเบียนข้อมูลสุนัข {% endblock %} {% block extra_head %}
+<!-- Dropzone Custom CSS -->
+<link rel="stylesheet" href="{% static 'dropzone-custom.css' %}" />
+{% endblock %} {% block content %}
+
+<div class="max-w-4xl mx-auto bg-white p-8 shadow-xl rounded-xl">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">🐶 ลงทะเบียนข้อมูลสุนัข</h1>
+
+  {% if messages %}
+  <div class="mb-6">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} mb-2">
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form
+    method="post"
+    enctype="multipart/form-data"
+    id="dog-form"
+    class="space-y-8"
+  >
+    {% csrf_token %}
+
+    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+      <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">
+        ข้อมูลพื้นฐาน
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">{{ form.name.label_tag }}{{ form.name }}</div>
+        <div class="form-control">{{ form.age.label_tag }}{{ form.age }}</div>
+
+        <div class="form-control">
+          <label class="label">{{ form.gender.label }}</label>
+          {{ form.gender }}
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+      <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">
+        ลักษณะทางกายภาพ
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          {{ form.primary_color.label_tag }}{{ form.primary_color }}
+        </div>
+        <div class="form-control">
+          {{ form.secondary_color.label_tag }}{{ form.secondary_color }}
+        </div>
+
+        <div class="form-control">
+          {{ form.weight.label_tag }}{{ form.weight }}
+        </div>
+
+        <div class="form-control md:col-span-3">
+          {{ form.distinguishing_marks.label_tag }}
+          {{form.distinguishing_marks}}
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+      <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">
+        ขนาดตัว
+      </h2>
+      <div class="grid grid-cols-1 gap-4">
+        <div class="form-control">{{ form.size.label }} {{ form.size }}</div>
+        <span>
+          <img src="{% static 'dogsizepng.png' %}" />
+        </span>
+      </div>
+    </div>
+
+    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+      <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">
+        นิสัยและสุขภาพ
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          {{ form.personality.label_tag }}{{ form.personality }}
+        </div>
+        <div class="form-control">
+          {{ form.favorite_food.label_tag }}{{ form.favorite_food }}
+        </div>
+        <div class="form-control">
+          {{ form.allergies.label_tag }}{{ form.allergies }}
+        </div>
+      </div>
+    </div>
+    {% if role == 'org_admin' %}
+    <h2 class="text-2xl font-bold text-gray-700 mt-8 mb-4 border-t pt-4">
+      ข้อมูลสุขภาพและการจัดการ (สำหรับผู้ดูแล)
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="label"
+          ><span class="label-text">สถานะการควบคุมกำเนิด (ทำหมัน)</span></label
+        >
+        {{ form.sterilization_status }} {% if form.sterilization_status.errors%}
+        <p class="text-error text-sm">{{ form.sterilization_status.errors }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="label"
+          ><span class="label-text">วันที่ดำเนินการล่าสุด</span></label
+        >
+        {{ form.sterilization_date }} {% if form.sterilization_date.errors %}
+        <p class="text-error text-sm">{{ form.sterilization_date.errors }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-control mt-4 p-4 border rounded-lg bg-gray-50">
+      <label class="label">
+        <span class="label-text text-lg font-semibold">วัคซีนที่ฉีดแล้ว</span>
+      </label>
+      {{ form.vaccine_selection }} {% if form.vaccine_selection.errors %}
+      <p class="text-error text-sm mt-2">{{ form.vaccine_selection.errors }}</p>
+      {% endif %}
+    </div>
+
+    {{ form.vaccination_history }} {% endif %}
+
+    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+      <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">
+        รูปภาพสุนัข (สูงสุด 5 รูป)
+      </h2>
+
+      {# Dropzone Area #}
+      <div id="dropzone-area" class="dropzone">
+        <div class="dz-message">
+          <p class="text-lg text-gray-600 mb-2">
+            ลากและวางรูปภาพที่นี่ หรือคลิกเพื่อเลือกไฟล์
+          </p>
+        </div>
+      </div>
+
+      {# Hidden formset สำหรับเก็บข้อมูลรูปภาพ #}
+      <div id="formset-container" style="display: none">
+        {{ formset.management_form }}
+        <div id="formset-forms"></div>
+      </div>
+
+      {# Preview area #}
+      <div
+        id="image-preview"
+        class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"
+      ></div>
+    </div>
+
+    <button
+      type="submit"
+      class="btn btn-lg w-full text-white bg-primary-blue-custom hover:bg-blue-600 border-none"
+    >
+      บันทึกข้อมูลสุนัข
+    </button>
+  </form>
+</div>
+{% endblock %} {% block extra_scripts %}
+<!-- Dropzone Custom JS -->
+<script src="{% static 'dropzone-custom.js' %}"></script>
+<script>
+  // เรียกใช้ Dropzone Formset Handler
+  initDropzoneFormset({
+    dropzoneId: "dropzone-area",
+    formsetContainerId: "formset-container",
+    formsetFormsId: "formset-forms",
+    previewContainerId: "image-preview",
+    formId: "dog-form",
+    maxFiles: 5,
+    existingImagesCount: 0,
+  });
+</script>
+{% endblock %}

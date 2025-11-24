@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}รายการสุนัขทั้งหมดในระบบ{% endblock %} 
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+    
+    <header class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-indigo-700 dark:text-indigo-400">
+            <span class="inline-block align-middle">
+                <img src="/static/images/dog_icon.png" alt="Dog" class="w-10 h-10 mr-3">
+            </span>
+            รายการสุนัขทั้งหมด
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400 mt-2">ค้นหาและดูรายละเอียดสุนัขทั้งหมดในระบบ</p>
+    </header>
+
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <div class="flex-grow">
+            <input type="text" placeholder="🔍 ค้นหา ชื่อ, สายพันธุ์, หรือ องค์กร..." 
+                   class="input input-bordered w-full input-lg shadow-sm">
+        </div>
+        <div>
+            <select class="select select-bordered select-lg w-full md:w-auto shadow-sm">
+                <option disabled selected>เรียงตาม</option>
+                <option>ชื่อ (ก-ฮ)</option>
+                <option>อายุ (น้อยไปมาก)</option>
+                <option>วันที่ลงทะเบียนล่าสุด</option>
+            </select>
+        </div>
+    </div>
+
+    <div role="tablist" class="tabs tabs-boxed mb-8 text-sm sm:text-base shadow-lg">
+        <a role="tab" class="tab tab-active">ทั้งหมด ({{ total_dogs }})</a>
+        <a role="tab" class="tab">✅ สุขภาพดี ({{ healthy_dogs }})</a>
+        <a role="tab" class="tab">🆘 สูญหาย ({{ lost_dogs }})</a>
+        <a role="tab" class="tab">💉 รับวัคซีนแล้ว ({{ vaccinated_dogs }})</a>
+        <a role="tab" class="tab">🏘️ องค์กรดูแล ({{ org_dogs }})</a>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div class="stat bg-blue-500 text-white rounded-xl shadow-lg p-4">
+            <div class="stat-value text-3xl">{{ total_dogs }}</div>
+            <div class="stat-title text-white">สุนัขทั้งหมด</div>
+        </div>
+        <div class="stat bg-purple-500 text-white rounded-xl shadow-lg p-4">
+            <div class="stat-value text-3xl">{{ org_dogs }}</div>
+            <div class="stat-title text-white">องค์กรดูแล</div>
+        </div>
+        <div class="stat bg-pink-500 text-white rounded-xl shadow-lg p-4">
+            <div class="stat-value text-3xl">0</div>
+            <div class="stat-title text-white">พร้อมรับเลี้ยง</div>
+        </div>
+        <div class="stat bg-green-500 text-white rounded-xl shadow-lg p-4">
+            <div class="stat-value text-3xl">{{ vaccinated_dogs }}</div>
+            <div class="stat-title text-white">ฉีดวัคซีนแล้ว</div>
+        </div>
+    </div>
+    
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">รายการสุนัข</h2>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="dog-list-container">
+        {% for dog in dog_list %}
+            {% include 'dog/dog_card.html' with dog=dog %}
+        {% empty %}
+            <div class="col-span-full text-center py-10">
+                <p class="text-xl text-gray-500">ไม่พบข้อมูลสุนัขที่ตรงกับเงื่อนไข</p>
+                <p class="text-sm text-gray-400">ลองใช้คำค้นหาหรือตัวกรองอื่น</p>
+            </div>
+        {% endfor %}
+        </div>
+</div>
+{% endblock %}

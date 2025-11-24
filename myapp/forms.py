@@ -1,20 +1,36 @@
 # users/forms.py
 
 from django import forms
-from .models import Dog, DogImage
+from django.db.models import Q
+from .models import Dog, DogImage,Notification
+
+
 
 # --- 1. Form สำหรับข้อมูลสุนัข ---
 class DogForm(forms.ModelForm):
+        
+    ISLOST_CHOICES = [
+        (True, "สูญหาย"),
+        (False, "ปกติ"),
+    ]
+
+    # override ฟิลด์จาก Model เพื่อใช้ radio + label
+    is_lost = forms.TypedChoiceField(
+        choices=ISLOST_CHOICES,
+        coerce=lambda x: x == 'True',  # แปลงค่าจาก form ให้เป็น Boolean จริง
+        widget=forms.RadioSelect,
+        label="สถานะ",
+    )
+    
     class Meta:
         model = Dog
         # ไม่ต้องรวม 'owner' และ 'organization' เพราะเราจะกำหนดค่าเหล่านี้ใน View
         fields = [
-            'name', 'gender', 'age', 'breed', 
-            'primary_color', 'secondary_color', 'size', 
-            'weight', 'distinguishing_marks', 
-            'personality', 'favorite_food', 'allergies', 
-            'is_lost'
+            'name', 'gender', 'age', 'is_lost',
+            'primary_color', 'secondary_color', 'size','distinguishing_marks', 
+            'personality', 'favorite_food', 'allergies'
         ]
+        
         widgets = {
             # ใช้ Textarea สำหรับฟิลด์ข้อความหลายบรรทัด
             'personality': forms.Textarea(attrs={'rows': 3}),
@@ -22,6 +38,7 @@ class DogForm(forms.ModelForm):
             'allergies': forms.Textarea(attrs={'rows': 3}),
             'distinguishing_marks': forms.Textarea(attrs={'rows': 3}),
         }
+        
 
     # เพื่อเพิ่มคลาส Tailwind/DaisyUI ให้กับ Input Fields ทั้งหมด
     def __init__(self, *args, **kwargs):
@@ -49,6 +66,78 @@ class DogImageForm(forms.ModelForm):
         model = DogImage
         fields = ['image']
 
+
+VACCINE_CHOICES = [
+    ('DHPPL', 'วัคซีนรวม (DHPPL/7โรค)'),
+    ('Rabies', 'วัคซีนพิษสุนัขบ้า'),
+    ('Kennel_Cough', 'วัคซีนป้องกันไอ (Kennel Cough)'),
+]
+
+class OrgAdminDogForm(DogForm): # 💡 สืบทอดจาก DogForm เพื่อนำฟิลด์พื้นฐานมาทั้งหมด
+    
+    # 2.1. Form Field สำหรับวัคซีน (ใช้ Multiple Checkbox)
+    vaccine_selection = forms.MultipleChoiceField(
+        choices=VACCINE_CHOICES,
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'checkbox-list space-y-2'}),
+        label="วัคซีนที่ฉีดแล้ว"
+    )
+    
+    class Meta(DogForm.Meta):
+        # 💡 เพิ่มฟิลด์ที่ Admin ต้องการลงใน Meta.fields
+        fields = DogForm.Meta.fields + [
+            'vaccination_history', 
+            'sterilization_status', 
+            'sterilization_date'
+        ]
+        widgets = {
+             # กำหนด widget สำหรับฟิลด์ Date
+            'sterilization_date': forms.DateInput(attrs={'class': 'input input-bordered w-full', 'type': 'date'}),
+             # กำหนด widget สำหรับฟิลด์ Select
+            'sterilization_status': forms.Select(attrs={'class': 'select select-bordered w-full'}),
+            # vaccination_history จะถูกซ่อน (hidden) และจัดการผ่าน vaccine_selection
+            'vaccination_history': forms.HiddenInput(),
+        }
+
+
+    # 2.2. Override __init__ เพื่อโหลดค่าวัคซีนจาก Model (String -> List)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # 1. โหลดค่าวัคซีน (Logic เดิม)
+        if self.instance and self.instance.vaccination_history:
+            initial_vaccines = [v.strip() for v in self.instance.vaccination_history.split(',') if v.strip()]
+            self.fields['vaccine_selection'].initial = initial_vaccines
+
+        # 💡 2. [การแก้ไข]: กำหนด CSS Class ให้ฟิลด์ที่เพิ่มเข้ามาใหม่
+        # บังคับอัปเดต Widget Attribute อีกครั้งเพื่อให้แน่ใจว่าได้ class DaisyUI
+        
+        # ฟิลด์ sterilization_status (Select)
+        self.fields['sterilization_status'].widget.attrs.update({
+            'class': 'select select-bordered w-full'
+        })
+        
+        # ฟิลด์ sterilization_date (Date Input)
+        self.fields['sterilization_date'].widget.attrs.update({
+            'class': 'input input-bordered w-full',
+            'type': 'date' # ย้ำ type='date'
+        })
+
+    # 2.3. Override save() เพื่อบันทึกค่าวัคซีนกลับสู่ Model (List -> String)
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # แปลง List ของวัคซีนที่เลือก ให้เป็น String คั่นด้วยคอมมา
+        vaccine_list = self.cleaned_data.get('vaccine_selection', [])
+        instance.vaccination_history = ', '.join(vaccine_list)
+        if hasattr(instance, 'organization'):
+            instance.organization = True
+        # ค่า sterilization_status และ date จะถูกบันทึกโดย super().save()
+        
+        if commit:
+            instance.save()
+        return instance
+    
 # --- 3. FormSet สำหรับจัดการหลายรูปภาพใน View ---
 DogImageFormSet = forms.inlineformset_factory(
     Dog, 
@@ -58,3 +147,51 @@ DogImageFormSet = forms.inlineformset_factory(
     max_num=5,        
     can_delete=True # ⚠️ สำคัญมาก: อนุญาตให้ลบรายการที่มีอยู่ได้
 )
+
+class NotificationForm(forms.ModelForm):
+    
+    class Meta:
+        model = Notification
+        fields = [
+            'title', 
+            'content', 
+            'notification_type', 
+            'image', 
+            'is_important', 
+            'dog'
+        ]
+        
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'input input-bordered w-full input-lg', 'placeholder': 'หัวข้อข่าวสาร...'}),
+            'content': forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full h-48', 'placeholder': 'รายละเอียดข่าวสาร...'}),
+            'notification_type': forms.Select(attrs={'class': 'select select-bordered w-full select-lg'}),
+            'is_important': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+            # 💡 'dog' (สุนัขที่เกี่ยวข้อง) จะถูกซ่อนหรือกรองใน View/Template ขึ้นอยู่กับประเภท
+            'dog': forms.Select(attrs={'class': 'select select-bordered w-full select-lg'}),
+        }
+        labels = {
+            'title': "หัวข้อ",
+            'content': "รายละเอียด",
+            'notification_type': "ประเภทข่าวสาร",
+            'image': "รูปภาพประกอบ (ถ้ามี)",
+            'is_important': "ทำเครื่องหมายว่า 'สำคัญมาก' ",
+            'dog': "สุนัขที่เกี่ยวข้อง (เฉพาะประเภท 'ประกาศเฉพาะสุนัข')"
+        }
+
+    # 1.2 Override __init__ เพื่อให้ Admin องค์กรเห็นเฉพาะสุนัขในความดูแล
+    def __init__(self, *args, **kwargs):
+        # รับ user เข้ามาเพื่อกรองสุนัขในฟิลด์ 'dog'
+        self.user = kwargs.pop('user', None) 
+        super().__init__(*args, **kwargs)
+        
+        # กรองตัวเลือกในฟิลด์ 'dog' ให้เหลือแต่สุนัขที่สังกัดองค์กรของ Admin คนนี้
+        if self.user and self.user.role == 'org_admin':
+            # กรองสุนัขที่อยู่ในการดูแลของโฮงเกลือหมา (organization=True) 
+            # หรือสุนัขที่ org_admin คนนี้เป็นเจ้าของ (owner=self.user)
+            self.fields['dog'].queryset = Dog.objects.filter(
+                Q(organization=True) | Q(owner=self.user)
+            )
+        else:
+            # ถ้าไม่ใช่ Admin องค์กร อาจจะซ่อนฟิลด์ dog ไปเลย
+            self.fields['dog'].widget = forms.HiddenInput()
+            self.fields['dog'].required = False

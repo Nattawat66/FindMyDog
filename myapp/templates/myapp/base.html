@@ -30,6 +30,7 @@
     </style>
     {% block extra_head %}{% endblock %}
 </head>
+
 <body class="bg-gray-50 min-h-screen">
 
     <nav class="navbar bg-base-200 shadow-md">
@@ -43,8 +44,8 @@
             <div class="flex-none">
                 <ul class="menu menu-horizontal px-1">
                     <li><a href="{% url 'home' %}">หน้าหลัก</a></li>
-                    <li><a href="#">ตามหาน้องหมา</a></li>
-                    <li><a href="#">รายงานพบ</a></li>
+                    <li><a href="{% url 'notification_list'%}">ข่าวสาร</a></li>
+                    <li><a href="{% url 'dog_all_list'%}">สุนัขทั้งหมด</a></li>
                 </ul>
 
                 {% if user.is_authenticated %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %} {% block extra_head %}
+<!-- HTMX -->
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+{% endblock %} {% block content %}
+
+<div class="max-w-4xl mx-auto p-4">
+  <h1 class="text-3xl font-bold mb-6">🔔 ข่าวสารและการแจ้งเตือน</h1>
+
+  <div class="space-y-4" id="notification-feed">
+    {% for note in notifications %}
+
+    <div
+      class="card card-side bg-base-100 shadow-lg cursor-pointer hover:bg-gray-50 transition duration-150 p-4"
+      hx-get="{% url 'notification_detail_hx' note.pk %}"
+      hx-target="#modal-content"
+      hx-swap="innerHTML"
+      hx-trigger="click"
+    >
+      <figure class="h-48 overflow-hidden w-48 flex-shrink-0">
+        {% if note.dog %} {# ถ้าเป็นข่าวสารของสุนัข ให้แสดงรูปภาพของสุนัข #}
+          {%with primary_image=note.dog.images.first %} 
+            {% if primary_image %}
+              <img
+                src="{{ primary_image.image.url }}"
+                alt="{{ note.dog.name }}"
+                class="object-cover w-full h-full"
+              />
+            {% else %}
+              <div class="h-full bg-gray-200 flex items-center justify-center">
+                <span class="text-gray-500">ไม่มีรูปภาพ</span>
+              </div>
+            {% endif %} 
+          {% endwith %} 
+        {% elif note.image %}
+          {#ถ้าเป็นข่าวสารปกติให้แสดงรูปภาพจาก notification.image #}
+          <img
+            src="{{ note.image.url }}"
+            alt="{{ note.title }}"
+            class="object-cover w-full h-full"
+          />
+        {% else %} {# ถ้าไม่มีรูปภาพเลย #}
+          <div class="h-full bg-gray-200 flex items-center justify-center">
+            <span class="text-gray-500">ไม่มีรูปภาพ</span>
+          </div>
+        {% endif %}
+      </figure>
+      <div class="card-body py-0">
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">
+            {% if note.notification_type == 'ACTIVITY' %} 
+              🎉 
+            {% elif note.notification_type == 'LOST_DOG' %} 
+              🆘 
+            {% else %} 
+              📝 
+            {% endif %}
+          </span>
+
+          <h2 class="card-title text-lg font-semibold truncate">
+            {{ note.title }}
+          </h2>
+
+          {% if note.is_important %}
+          <div class="badge badge-error badge-outline">สำคัญมาก</div>
+          {% endif %}
+        </div>
+
+        <p class="text-sm text-gray-600 line-clamp-2 mt-1">
+          {{ note.content|striptags }}
+        </p>
+        <span class="text-xs text-gray-400 mt-2"
+          >{{ note.created_at|date:"d M Y" }}</span
+        >
+      </div>
+      <div class="flex items-center">
+        <span class="text-lg text-primary-blue-custom">อ่านเพิ่มเติม &gt;</span>
+      </div>
+    </div>
+
+    {% empty %}
+    <p class="text-center py-10 text-gray-500">ไม่มีข่าวสารในขณะนี้</p>
+    {% endfor %}
+  </div>
+
+  <dialog id="notification_modal" class="modal">
+    <div
+      id="modal-content"
+      class="modal-box w-11/12 max-w-2xl p-0 overflow-hidden"
+    ></div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+</div>
+
+{% block extra_scripts %}
+<script>
+  // เปิด modal หลังจาก HTMX โหลดข้อมูลเสร็จ
+  document.body.addEventListener("htmx:afterSwap", function (event) {
+    if (event.detail.target.id === "modal-content") {
+      document.getElementById("notification_modal").showModal();
+    }
+  });
+</script>
+{% endblock %} {% endblock %}
