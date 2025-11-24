@@ -6,14 +6,13 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
-<<<<<<< HEAD
 
 from .models import Dog, DogImage, User, Organization
-=======
+
 from .models import Dog, DogImage, User, Organization,Notification, AdoptionParent
 from django.db.models import Q
 from django.db import models
->>>>>>> actorparent
+
 
 # ---------- UI Render Views ----------
 @login_required
@@ -191,12 +190,12 @@ def register_dog_page(request):
         'formset': formset,
         'role' : role,
     }
-<<<<<<< HEAD
+
     return render(request, 'myapp/registerdog.html', context)
 
-=======
+
     return render(request, 'myapp/dog/registerdog.html', context)
->>>>>>> actorparent
+
 @csrf_protect
 def register(request):
     if request.method == 'POST':
@@ -262,14 +261,13 @@ def login(request):
 
         if user is not None:
             auth_login(request, user)
-<<<<<<< HEAD
+
             return redirect('home')
         else:
             messages.error(request, 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง')
             return render(request, 'myapp/loginuser.html')
     return render(request, 'myapp/loginuser.html')
-=======
-            # messages.success(request, f'ยินดีต้อนรับ {user.username}!')
+   # messages.success(request, f'ยินดีต้อนรับ {user.username}!')
             # Redirect ไปที่หน้าแรกหรือหน้าที่ต้องการ
             # ถ้ามี next parameter ให้ไปที่นั้น ถ้าไม่มีให้ไปที่ home ตาม LOGIN_REDIRECT_URL
             next_url = request.GET.get('next', None)
@@ -282,7 +280,7 @@ def login(request):
             return render(request, 'myapp/loginuser.html')
     
     return render(request, 'myapp/authen/loginuser.html')
->>>>>>> actorparent
+
 
 # @login_required
 # def admin_page(request):
