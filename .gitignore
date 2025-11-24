@@ -4,3 +4,8 @@ README.md
 main.py
 pyproject.toml
 uv.lock
+
+db.sqlite3
+__pycache__/
+*.pyc
+*.log

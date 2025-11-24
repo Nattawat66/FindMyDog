@@ -257,4 +257,4 @@ def delete_dog_page(request, dog_id):
         return redirect('dog_list')
     
     # ถ้าเป็น GET request ให้ redirect กลับไปหน้า detail (modal จะแสดงในหน้า detail)
-    return redirect('dog_detail', dog_id=dog_id)
+    return redirect('dog_detail', dog_id=dog_id)    
