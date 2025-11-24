@@ -222,7 +222,7 @@ def register(request):
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
             return render(request, 'myapp/registeruser.html')
     
-    return render(request, 'myapp/registeruser.html')
+    return render(request, 'myapp/authen/registeruser.html')
 
 # from django.contrib.admin.views.decorators import staff_member_required
 
