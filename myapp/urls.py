@@ -8,6 +8,8 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path('logout/', LogoutView.as_view(), name='logout'),
     path("login/", views.login, name="login"),
+    path('admin_page/', views.admin_page, name='admin_page'),
+
     path('dog/register/', views.register_dog_page, name='register_dog_page'),
     path('dogs/', views.dog_list, name='dog_list'),
     path('dogsall/', views.dog_all_list, name='dog_all_list'),
@@ -18,4 +20,6 @@ urlpatterns = [
     path('notifications/<int:notification_id>/edit/', views.edit_notification_view, name='edit_notification'),
     path('notifications/<int:notification_id>/delete/', views.delete_notification_view, name='delete_notification'),
     path('dogs/<int:dog_id>/delete/', views.delete_dog_page, name='delete_dog_page'),
+
+    path('SetautoTraining/', views.set_auto_training, name='set_auto_training'),
 ]
