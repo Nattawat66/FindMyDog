@@ -261,13 +261,7 @@ def login(request):
 
         if user is not None:
             auth_login(request, user)
-
-            return redirect('home')
-        else:
-            messages.error(request, 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง')
-            return render(request, 'myapp/loginuser.html')
-    return render(request, 'myapp/loginuser.html')
-   # messages.success(request, f'ยินดีต้อนรับ {user.username}!')
+            # messages.success(request, f'ยินดีต้อนรับ {user.username}!')
             # Redirect ไปที่หน้าแรกหรือหน้าที่ต้องการ
             # ถ้ามี next parameter ให้ไปที่นั้น ถ้าไม่มีให้ไปที่ home ตาม LOGIN_REDIRECT_URL
             next_url = request.GET.get('next', None)
