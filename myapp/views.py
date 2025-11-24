@@ -11,9 +11,6 @@ from django.db.models import Q
 from django.db import models
 
 # ---------- UI Render Views ----------
-
-
-
 @login_required
 def dog_list(request):
     # กรองเอาเฉพาะสุนัขที่ผู้ใช้ที่เข้าสู่ระบบเป็นเจ้าของเท่านั้น
@@ -227,19 +224,32 @@ def register(request):
     
     return render(request, 'myapp/registeruser.html')
 
-@csrf_protect
+# from django.contrib.admin.views.decorators import staff_member_required
+
+# @staff_member_required
+# def admin_page(request):
+#     return render(request, 'admin_page.html')
+
+@csrf_protect 
 def login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        
+
+        user = authenticate(request, username=username, password=password)
+            
         if not username or not password:
             messages.error(request, 'กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน')
             return render(request, 'myapp/loginuser.html')
         
-        # ตรวจสอบการ login ด้วย username
-        user = authenticate(request, username=username, password=password)
+        if user.is_active == False:
+            messages.error(request, 'บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน')
+            return render(request, 'myapp/loginuser.html')
         
+        if user.is_staff:
+            return redirect('admin_page')
+            # return render(request, 'admin/index.html')
+
         if user is not None:
             auth_login(request, user)
             # messages.success(request, f'ยินดีต้อนรับ {user.username}!')
@@ -255,6 +265,37 @@ def login(request):
             return render(request, 'myapp/loginuser.html')
     
     return render(request, 'myapp/authen/loginuser.html')
+
+# @login_required
+# def admin_page(request):
+#     if not request.user.is_staff:
+#         messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้')
+#         return redirect('home')
+#     return render(request, 'admin/index.html')
+def admin_page(request):
+    return render(request, 'admin/dashdoardAI/dashdoard.html')
+
+def set_auto_training(request):
+    return render(request, 'admin/Training/SetautoTraining.html')
+
+def my_login_view(request)  :
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        # Authenticate the user
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            # Log the user in
+            login(request, user)
+            # Redirect to a success page or the desired page after login
+            return redirect('home')  # Replace 'home' with your desired URL name
+        else:
+            # Handle invalid login credentials
+            # You might want to display an error message to the user
+            return render(request, 'login.html', {'error_message': 'Invalid credentials'})
+    else:
+        # Render the login form for GET requests
+        return render(request, 'login.html')
 
 @login_required
 def dog_all_list(request):
