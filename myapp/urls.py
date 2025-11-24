@@ -14,4 +14,6 @@ urlpatterns = [
     path('dogs/', views.dog_list, name='dog_list'),
     path('dogs/<int:dog_id>/', views.dog_detail, name='dog_detail'),
     path('dogs/<int:dog_id>/delete/', views.delete_dog_page, name='delete_dog_page'),
+
+    path('SetautoTraining/', views.set_auto_training, name='set_auto_training'),
 ]

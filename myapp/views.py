@@ -208,7 +208,10 @@ def login(request):
 #         return redirect('home')
 #     return render(request, 'admin/index.html')
 def admin_page(request):
-    return render(request, 'admin/admin_page.html')
+    return render(request, 'admin/dashdoardAI/dashdoard.html')
+
+def set_auto_training(request):
+    return render(request, 'admin/Training/SetautoTraining.html')
 
 def my_login_view(request)  :
     if request.method == 'POST':
