@@ -1,53 +1,6 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Management - Admin Panel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        [x-cloak] { display: none !important; }
-    </style>
-</head>
-<body class="bg-gray-50" x-data="{ sidebarOpen: true }">
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar Navigation -->
-        <aside class="w-80 flex-shrink-0" :class="{'hidden lg:block': !sidebarOpen}">
-            {% include 'admin/navber.html' %}
-        </aside>
-
-        <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Header -->
-            <header class="bg-white shadow-sm border-b border-gray-200">
-                <div class="flex items-center justify-between px-6 py-4">
-                    <div class="flex items-center space-x-4">
-                        <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-600 hover:text-gray-900">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                            </svg>
-                        </button>
-                        <h2 class="text-xl font-semibold text-gray-800">Admin Dashboard</h2>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="#" class="text-gray-600 hover:text-gray-900 text-sm">
-                            <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                            </svg>
-                            กลับหน้าหลัก
-                        </a>
-                        <form action="{% url 'logout' %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">
-                                ออกจากระบบ
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </header>
-
+{% extends "admin/baseAI.html" %}
+{% block title%} AI Management Dashboard  {% endblock %}
+{% block content %}
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto p-6">
                 <div class="max-w-7xl mx-auto">
@@ -173,14 +126,4 @@
                     </div>
                 </div>
             </main>
-        </div>
-    </div>
-
-    <!-- Mobile Sidebar Overlay -->
-    <div x-show="sidebarOpen" 
-         x-cloak
-         @click="sidebarOpen = false"
-         class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"></div>
-</body>
-</html>
-
+{% endblock %}
