@@ -6,9 +6,11 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
-from .models import Dog, DogImage, User, Organization,Notification, AdoptionParent
+from .models import Dog, DogImage, User,Notification, AdoptionParent
 from django.db.models import Q
 from django.db import models
+
+
 
 # ---------- UI Render Views ----------
 @login_required
@@ -39,6 +41,7 @@ def dog_list(request):
 @login_required
 def dog_detail(request, dog_id):
     # Admin (is_staff) สามารถดูได้ทุกตัว, User ทั่วไป (is_staff=False) ดูได้แค่ของตัวเอง
+    is_org = request.user.role == 'org_admin'
     if request.user.is_staff:
         # Admin: ไม่ต้องมีเงื่อนไข owner
         # ใช้ .get() แทน .filter() เพื่อให้เกิด 404 หากไม่พบ ID
@@ -63,6 +66,9 @@ def dog_detail(request, dog_id):
             # ไม่ใช่เจ้าของ: ดูได้แต่แก้ไขไม่ได้
             can_edit = False
 
+    # กำหนด Form class ตามสิทธิ์
+    DogFormClass = OrgAdminDogForm if is_org else DogForm
+
     # ตรวจสอบว่าอยู่ในโหมดแก้ไขหรือไม่
     is_edit_mode = request.GET.get('edit', 'false').lower() == 'true' and can_edit
     
@@ -72,7 +78,7 @@ def dog_detail(request, dog_id):
             messages.error(request, 'คุณไม่มีสิทธิ์แก้ไขข้อมูลสุนัขตัวนี้')
             return redirect('dog_detail', dog_id=dog.id)
         # ⚠️ การแก้ไข: ต้องส่ง instance=dog เพื่อให้ฟอร์มโหลดข้อมูลเดิมมาแก้ไข
-        form = DogForm(request.POST, instance=dog)
+        form = DogFormClass(request.POST, instance=dog)
         # ⚠️ สำหรับ FormSet: ต้องส่ง request.FILES และ instance=dog ด้วย
         formset = DogImageFormSet(request.POST, request.FILES, instance=dog) 
 
@@ -103,7 +109,7 @@ def dog_detail(request, dog_id):
         # --- สำหรับการแสดงผล/เปิดฟอร์มแก้ไข (Initial Load) ---
         
         # 5. โหลดข้อมูลสุนัขเดิมเข้าสู่ฟอร์ม
-        form = DogForm(instance=dog) 
+        form = DogFormClass(instance=dog) 
         
         # 6. โหลดรูปภาพที่มีอยู่เดิมเข้าสู่ FormSet
         formset = DogImageFormSet(instance=dog) 
@@ -137,6 +143,7 @@ def dog_detail(request, dog_id):
         'is_edit_mode': is_edit_mode, # ส่งสถานะโหมดแก้ไข
         'can_edit': can_edit, # ส่งสิทธิ์การแก้ไข
         'vaccine_display_list': vaccine_display_list,
+        'is_org': is_org,
     }
     return render(request, 'myapp/dog/dog_detail.html', context)
 
@@ -242,15 +249,12 @@ def login(request):
             messages.error(request, 'กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน')
             return render(request, 'myapp/loginuser.html')
         
-        if user.is_active == False:
-            messages.error(request, 'บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน')
-            return render(request, 'myapp/loginuser.html')
-        
-        if user.is_staff:
-            return redirect('admin_page')
-            # return render(request, 'admin/index.html')
-
         if user is not None:
+            if user.is_staff:
+                return redirect('admin_page')
+            if user.is_active == False:
+                messages.error(request, 'บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน')
+                return render(request, 'myapp/loginuser.html')
             auth_login(request, user)
             # messages.success(request, f'ยินดีต้อนรับ {user.username}!')
             # Redirect ไปที่หน้าแรกหรือหน้าที่ต้องการ
@@ -262,8 +266,9 @@ def login(request):
                 return redirect('home')  # ใช้ชื่อ URL pattern แทน path
         else:
             messages.error(request, 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง')
-            return render(request, 'myapp/loginuser.html')
-    
+            return redirect('login')
+        
+
     return render(request, 'myapp/authen/loginuser.html')
 
 # @login_required
@@ -300,10 +305,10 @@ def my_login_view(request)  :
 @login_required
 def dog_all_list(request):
     context = {
-        'total_dogs': 50,
-        'lost_dogs': 5,
-        'org_dogs': 25,
-        'vaccinated_dogs': 0,
+        'total_dogs': Dog.objects.all().count(),
+        'lost_dogs': Dog.objects.filter(is_lost=True).count(),
+        'org_dogs': Dog.objects.filter(organization=True).count(),
+        # 'vaccinated_dogs': Dog.objects.filter(vaccinated=True).count(),
         'dog_list': Dog.objects.all(), # ใช้ QuerySet จริงใน production
     }
     return render(request, 'myapp/dog/dog_all_list.html',context)
@@ -314,7 +319,12 @@ def home(request):
     if request.user.is_staff:
         return render(request, 'myapp/admin_backend/admin_home.html')
     elif role == 'org_admin':
-        return render(request, 'myapp/admin_org/admin_org_home.html')
+        context = {
+            'dogs_org': Dog.objects.filter(organization=True),
+            'dogs_org_count': Dog.objects.filter(organization=True).count(),
+            'dogs_lost_count': Dog.objects.filter(is_lost=True).count(),
+        }
+        return render(request, 'myapp/admin_org/admin_org_home.html',context)
     else:
         return render(request, 'myapp/home.html')
 

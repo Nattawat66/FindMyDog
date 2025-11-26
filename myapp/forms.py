@@ -33,10 +33,16 @@ class DogForm(forms.ModelForm):
         
         widgets = {
             # ใช้ Textarea สำหรับฟิลด์ข้อความหลายบรรทัด
-            'personality': forms.Textarea(attrs={'rows': 3}),
-            'favorite_food': forms.Textarea(attrs={'rows': 3}),
-            'allergies': forms.Textarea(attrs={'rows': 3}),
-            'distinguishing_marks': forms.Textarea(attrs={'rows': 3}),
+            'name': forms.TextInput(attrs={'placeholder': 'บัดดี้'}),
+            'age': forms.NumberInput(attrs={'placeholder': '2(หน่วยเป็นปี)'}),
+            'gender': forms.Select(attrs={'placeholder': 'เลือกเพศ'}),
+            'personality': forms.Textarea(attrs={'rows': 3, 'placeholder': 'ใจดี เป็นมิตร'}),
+            'favorite_food': forms.Textarea(attrs={'rows': 3, 'placeholder': 'ชอบกินโครงไก่'}),
+            'allergies': forms.Textarea(attrs={'rows': 3, 'placeholder': 'กินนมวัวไม่ได้'}),
+            'distinguishing_marks': forms.Textarea(attrs={'rows': 3, 'placeholder': 'หูตั้งตา2สี'}),
+            'primary_color': forms.TextInput(attrs={'placeholder': 'ดำ'}),
+            'secondary_color': forms.TextInput(attrs={'placeholder': 'น้ำตาล'}),
+            # 'size': forms.Select(attrs={'placeholder': 'เลือกขนาด'}),
         }
         
 
@@ -97,6 +103,16 @@ class OrgAdminDogForm(DogForm): # 💡 สืบทอดจาก DogForm เ�
             'sterilization_status': forms.Select(attrs={'class': 'select select-bordered w-full'}),
             # vaccination_history จะถูกซ่อน (hidden) และจัดการผ่าน vaccine_selection
             'vaccination_history': forms.HiddenInput(),
+                        'name': forms.TextInput(attrs={'placeholder': 'บัดดี้'}),
+            'age': forms.NumberInput(attrs={'placeholder': '2(หน่วยเป็นปี)'}),
+            'gender': forms.Select(attrs={'placeholder': 'เลือกเพศ'}),
+            'personality': forms.Textarea(attrs={'rows': 3, 'placeholder': 'ใจดี เป็นมิตร'}),
+            'favorite_food': forms.Textarea(attrs={'rows': 3, 'placeholder': 'ชอบกินโครงไก่'}),
+            'allergies': forms.Textarea(attrs={'rows': 3, 'placeholder': 'กินนมวัวไม่ได้'}),
+            'distinguishing_marks': forms.Textarea(attrs={'rows': 3, 'placeholder': 'หูตั้งตา2สี'}),
+            'primary_color': forms.TextInput(attrs={'placeholder': 'ดำ'}),
+            'secondary_color': forms.TextInput(attrs={'placeholder': 'น้ำตาล'}),
+            
         }
 
 

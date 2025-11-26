@@ -55,15 +55,17 @@
                                 {{ user.username.0|upper }}
                             </div>
                         </div>
+                        <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+                            {% csrf_token %}
+                        </form>
                         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                             <li><a href="#">โปรไฟล์</a></li>
                             <li><a href="{% url 'dog_list' %}">สุนัขของฉัน</a></li>
                             <li><a href="#">ตั้งค่า</a></li>
                             <li>
-                                <form action="{% url 'logout' %}" method="post" class="w-full">
-                                    {% csrf_token %} 
-                                    <button type="submit" class="w-full text-left ">ออกจากระบบ</button>
-                                </form>
+                                <button type="submit" form="logout-form" class="text-left w-full">
+                                    ออกจากระบบ
+                                </button>
                             </li>
                         </ul>
                     </div>

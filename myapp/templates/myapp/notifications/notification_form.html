@@ -3,10 +3,7 @@
 {% block title %}
   {{ title }}
 {%endblock %} 
-{% block extra_head %}
-<!-- Dropzone Custom CSS -->
 <link rel="stylesheet" href="{% static 'dropzone-custom.css' %}" />
-{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
   <header
@@ -66,10 +63,22 @@
       </div>
     <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
       <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">
-        รูปภาพประกอบ (ถ้ามี)
+        รูปภาพสุนัข (สูงสุด 5 รูป)
       </h2>
 
-      {# Dropzone Area สำหรับรูปเดียว #}
+
+      {% comment %} <div class="form-control">
+        <label class="label">
+          <span class="label-text font-bold">อัปโหลดรูปภาพ (ไม่บังคับ)</span>
+        </label>
+        {{ form.image }}
+        {% if form.image.errors %}
+          <span class="text-error text-sm mt-1">
+            {{ form.image.errors }}
+          </span>
+        {% endif %}
+      </div> {% endcomment %}
+      {# Dropzone Area #}
       <div id="dropzone-area" class="dropzone">
         <div class="dz-message">
           <p class="text-lg text-gray-600 mb-2">
@@ -78,11 +87,29 @@
         </div>
       </div>
 
-      {# Hidden input สำหรับเก็บรูปภาพ #}
-      <input type="file" name="image" id="id_image" accept="image/*" style="display: none;">
+      {# Hidden formset สำหรับเก็บข้อมูลรูปภาพ #}
+      {% comment %} <div id="formset-container" style="display: none">
+        {{ formset.management_form }}
+        <div id="formset-forms"></div>
+      </div> {% endcomment %}
 
+      <input
+      type="file"
+      name="{{ form.image.html_name }}"
+      id="id_image"
+      accept="image/*"
+      style="display: none"
+      />
+      {% if form.image.errors %}
+        <span class="text-error text-sm mt-1">
+          {{ form.image.errors }}
+        </span>
+      {% endif %}
       {# Preview area #}
-      <div id="image-preview" class="mt-4"></div>
+      <div
+        id="image-preview"
+        class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"
+      ></div>
     </div>
 
         <div class="card bg-base-100 border border-base-200 shadow-md">
@@ -121,15 +148,10 @@
         </div>
       </div>
 
-      <div class="mt-8 flex gap-2 {% if is_edit_mode %}justify-end{% else %}justify-center{% endif %}">
-        {% if is_edit_mode %}
-        <a href="{% url 'notification_list' %}" class="btn btn-outline btn-error">
-          ยกเลิก
-        </a>
-        {% endif %}
+      <div class="mt-8">
         <button
           type="submit"
-          class="btn btn-primary btn-lg shadow-lg"
+          class="btn btn-primary btn-block btn-lg shadow-lg"
         >
           {{ submit_text }}
         </button>
@@ -139,128 +161,16 @@
 </div>
 {% endblock %}
 {% block extra_scripts %}
-<!-- Dropzone.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
-<!-- Dropzone Custom CSS -->
-<link rel="stylesheet" href="{% static 'dropzone-custom.css' %}">
+<!-- Dropzone Custom JS (เพิ่มเวอร์ชันกัน cache เก่า) -->
+<script src="{% static 'dropzone-custom.js' %}?v=2"></script>
 <script>
-// Dropzone สำหรับรูปเดียว (Notification image field)
-function initNotificationDropzone() {
-  if (typeof Dropzone === 'undefined') {
-    setTimeout(initNotificationDropzone, 100);
-    return;
-  }
-  
-  Dropzone.autoDiscover = false;
-  
-  const dropzoneElement = document.getElementById('dropzone-area');
-  if (!dropzoneElement) {
-    console.error('Dropzone element not found');
-    return;
-  }
-  
-  if (dropzoneElement.dropzone) {
-    dropzoneElement.dropzone.destroy();
-  }
-  
-  const fileInput = document.getElementById('id_image');
-  const previewContainer = document.getElementById('image-preview');
-  
-  let uploadedFile = null;
-  
-  const dropzone = new Dropzone("#dropzone-area", {
-    url: "#",
-    autoProcessQueue: false,
-    addRemoveLinks: false,
+  // เรียกใช้ Dropzone Formset Handler
+  initDropzoneSingle({
+    dropzoneId: "dropzone-area",
+    previewContainerId: "image-preview",
+    inputId: "id_image",
+    formId: "notification-form",
     maxFiles: 1,
-    acceptedFiles: "image/*",
-    dictDefaultMessage: "",
-    dictMaxFilesExceeded: "คุณสามารถอัพโหลดได้เพียง 1 รูป",
-    clickable: true,
-    init: function() {
-      const dz = this;
-      
-      // เมื่อเพิ่มไฟล์
-      dz.on("addedfile", function(file) {
-        // ลบไฟล์เก่าถ้ามี
-        if (uploadedFile && uploadedFile !== file) {
-          dz.removeFile(uploadedFile);
-        }
-        
-        uploadedFile = file;
-        
-        // ใส่ไฟล์เข้าไปใน input
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-        
-        // อัพเดต preview
-        updatePreview();
-      });
-      
-      // เมื่อลบไฟล์
-      dz.on("removedfile", function(file) {
-        if (uploadedFile === file) {
-          uploadedFile = null;
-          fileInput.value = '';
-          updatePreview();
-        }
-      });
-      
-      // เมื่อมี error
-      dz.on("error", function(file, message) {
-        console.error('Dropzone error:', message);
-        alert('เกิดข้อผิดพลาด: ' + message);
-      });
-    }
   });
-  
-  // อัพเดต Preview
-  function updatePreview() {
-    previewContainer.innerHTML = '';
-    
-    if (uploadedFile) {
-      const previewDiv = document.createElement('div');
-      previewDiv.className = 'relative inline-block';
-      
-      const img = document.createElement('img');
-      img.src = URL.createObjectURL(uploadedFile);
-      img.className = 'w-full max-w-md h-64 object-cover rounded-md border';
-      img.alt = 'Preview';
-      
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600';
-      removeBtn.innerHTML = '×';
-      removeBtn.onclick = function() {
-        dropzone.removeFile(uploadedFile);
-      };
-      
-      previewDiv.appendChild(img);
-      previewDiv.appendChild(removeBtn);
-      previewContainer.appendChild(previewDiv);
-    }
-  }
-  
-  // ถ้ามีรูปเดิม (edit mode) ให้แสดง
-  {% if form.instance.image %}
-    const existingImageUrl = "{{ form.instance.image.url }}";
-    if (existingImageUrl) {
-      previewContainer.innerHTML = `
-        <div class="relative inline-block">
-          <img src="${existingImageUrl}" alt="รูปปัจจุบัน" class="w-full max-w-md h-64 object-cover rounded-md border">
-          <p class="text-sm text-gray-500 mt-2">รูปภาพปัจจุบัน (อัพโหลดรูปใหม่เพื่อแทนที่)</p>
-        </div>
-      `;
-    }
-  {% endif %}
-}
-
-// เริ่มต้นเมื่อ DOM พร้อม
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initNotificationDropzone);
-} else {
-  initNotificationDropzone();
-}
 </script>
 {% endblock %}

@@ -22,15 +22,6 @@ class User(AbstractUser):
         return f"{self.username} ({self.role})"
     
 
-class Organization(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    contact_info = models.CharField(max_length=255, blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-
 class Dog(models.Model):
     GENDER_CHOICES = [
         ('M', 'Male (ตัวผู้)'),

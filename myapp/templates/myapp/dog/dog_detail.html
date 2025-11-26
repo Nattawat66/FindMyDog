@@ -104,37 +104,17 @@
                         </label>
                     </div>
                 </div>
-                {% if role == 'org_admin' %}
+                {% if is_org %}
                     <h2 class="text-2xl font-bold text-gray-700 mt-8 mb-4 border-t pt-4">ข้อมูลสุขภาพและการจัดการ (สำหรับผู้ดูแล)</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        <div>
-                            <label class="label"><span class="label-text">สถานะการควบคุมกำเนิด (ทำหมัน)</span></label>
-                            {{ form.sterilization_status }}
-                            {% if form.sterilization_status.errors %}<p class="text-error text-sm">{{ form.sterilization_status.errors }}</p>{% endif %}
-                        </div>
-    
-                        <div>
-                            <label class="label"><span class="label-text">วันที่ดำเนินการล่าสุด</span></label>
-                            {{ form.sterilization_date }}
-                            {% if form.sterilization_date.errors %}<p class="text-error text-sm">{{ form.sterilization_date.errors }}</p>{% endif %}
-                        </div>
-                        
+                    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">สถานะการควบคุมกำเนิด (ทำหมัน)</h2>
+                        <div class="form-control">{{ form.sterilization_status.label_tag }}{{ form.sterilization_status }}</div>
+                        <div class="form-control">{{ form.sterilization_date.label_tag }}{{ form.sterilization_date }}</div>
                     </div>
-    
-                    <div class="form-control mt-4 p-4 border rounded-lg bg-gray-50">
-                        <label class="label"><span class="label-text text-lg font-semibold">วัคซีนที่ฉีดแล้ว</span></label>
-                        
-                        {{ form.vaccine_selection }} 
-                        
-                        {% if form.vaccine_selection.errors %}
-                            <p class="text-error text-sm mt-2">{{ form.vaccine_selection.errors }}</p>
-                        {% endif %}
+                    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">วัคซีนที่ฉีดแล้ว</h2>
+                        <div class="form-control">{{ form.vaccine_selection.label_tag }}{{ form.vaccine_selection }}</div>
                     </div>
-    
-                    {{ form.vaccination_history }} 
-                    
                 {% endif %}
 
 
