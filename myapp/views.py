@@ -1,5 +1,5 @@
 
-from .forms import DogForm, DogImageFormSet,OrgAdminDogForm,VACCINE_CHOICES,NotificationForm
+from .forms import DogForm, DogImageFormSet,OrgAdminDogForm,VACCINE_CHOICES,NotificationForm,ReportLostForm
 from django.shortcuts import render, redirect ,get_object_or_404
 from django.http import Http404
 from django.contrib.auth import authenticate, login as auth_login
@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Dog, DogImage, User,Notification, AdoptionParent
 from django.db.models import Q
 from django.db import models
-
+from django.http import JsonResponse
 
 
 # ---------- UI Render Views ----------
@@ -532,3 +532,89 @@ def user_profile_view(request):
         'profile_title': "ข้อมูลส่วนตัวของฉัน",
     }
     return render(request, 'myapp/user/profile.html', context)
+
+
+
+
+
+@login_required # หรือไม่ใส่ก็ได้ ขึ้นอยู่กับว่าคุณต้องการให้ใครเห็นแผนที่บ้าง
+def lost_dogs_map_view(request):
+
+    context = {
+        'map_title': "แผนที่ค้นหาสุนัขสูญหาย",
+    }
+    return render(request, 'myapp/map/map.html', context)
+
+
+
+@login_required
+def report_lost_dog_view(request, dog_id):
+    dog = get_object_or_404(Dog, pk=dog_id)
+    
+    # 💡 [ตรวจสอบสิทธิ์]: อนุญาตเฉพาะเจ้าของสุนัขหรือ Org Admin ที่ดูแลเท่านั้น
+    if dog.owner != request.user and dog.organization != request.user:
+        messages.error(request, "คุณไม่มีสิทธิ์ในการแจ้งสูญหายสุนัขตัวนี้")
+        return redirect('dog_detail', dog_id=dog_id)
+
+    if request.method == 'POST':
+        # ใช้ instance เพื่ออัปเดต Dog object เดิม
+        form = ReportLostForm(request.POST, instance=dog)
+        if form.is_valid():
+            lost_dog = form.save(commit=False)
+            
+            # กำหนดสถานะ is_lost เป็น True
+            lost_dog.is_lost = True 
+            
+            lost_dog.save()
+            
+            messages.success(request, f"แจ้งสูญหายสุนัข {dog.name} เรียบร้อยแล้ว! ตำแหน่งถูกบันทึกในแผนที่.")
+            return redirect('dog_detail', dog_id=dog_id)
+    else:
+        # 💡 ส่งค่า initial จาก Dog object เดิม (ถ้าเคยมีพิกัดอยู่แล้ว)
+        form = ReportLostForm(instance=dog) 
+
+    context = {
+        'dog': dog,
+        'form': form,
+        'title': f"ปักหมุดแจ้งสูญหาย: {dog.name}",
+    }
+    return render(request, 'myapp/map/report_lost_map.html', context)
+
+
+def lost_dogs_map_data(request):
+    
+    # 1. ดึงข้อมูลสุนัขที่สูญหายและมีพิกัด
+    # ใช้ prefetch_related('images') เพื่อโหลดรูปภาพ DogImage เข้ามาพร้อมกัน
+    lost_dogs_queryset = Dog.objects.filter(
+        is_lost=True, 
+        lost_latitude__isnull=False, 
+        lost_longitude__isnull=False
+    ).prefetch_related('images') # 💡 (สมมติ: related_name คือ 'images')
+
+    data = []
+    
+    for dog in lost_dogs_queryset:
+        image_url = None
+        
+        # 2. เข้าถึงรูปภาพแรก
+        # เทียบเท่ากับการใช้ dog.images.first() ใน Template
+        first_image = dog.images.first() 
+        
+        if first_image and first_image.image:
+            # 3. สร้าง URL รูปภาพที่สมบูรณ์จาก ImageField
+            # (สมมติ: ฟิลด์รูปภาพใน DogImage คือ 'image')
+            # request.build_absolute_uri จำเป็นสำหรับ URL รูปภาพที่ถูกต้อง
+            image_url = request.build_absolute_uri(first_image.image.url)
+        
+        # 4. ประกอบข้อมูล JSON
+        data.append({
+            'id': dog.id,
+            'name': dog.name,
+            # แปลง DecimalField เป็น float
+            'lat': float(dog.lost_latitude),
+            'lng': float(dog.lost_longitude),
+            'image_url': image_url or '', # ถ้าไม่มีรูปภาพ ให้ส่งสตริงว่างไป
+            'detail_url': f'/dog/{dog.id}/detail/' # URL สำหรับหน้าดูรายละเอียดสุนัข
+        })
+        
+    return JsonResponse({'dogs': data})

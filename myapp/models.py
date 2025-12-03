@@ -87,6 +87,28 @@ class Dog(models.Model):
     
     size = models.CharField(max_length=3, null=True,choices=SIZE_CHOICES, verbose_name="ขนาด")
     distinguishing_marks = models.TextField(blank=True, verbose_name="ลักษณะ/รอยตำหนิเด่น")
+    
+    
+    lost_latitude = models.DecimalField(
+        max_digits=9, 
+        decimal_places=6, 
+        null=True, 
+        blank=True, 
+        verbose_name="ละติจูด (Latitude)"
+    )
+    lost_longitude = models.DecimalField(
+        max_digits=9, 
+        decimal_places=6, 
+        null=True, 
+        blank=True, 
+        verbose_name="ลองจิจูด (Longitude)"
+    )
+    lost_location_description = models.CharField(
+        max_length=255, 
+        null=True, 
+        blank=True, 
+        verbose_name="รายละเอียดสถานที่สูญหาย"
+    )
 
     def __str__(self):
         return self.name

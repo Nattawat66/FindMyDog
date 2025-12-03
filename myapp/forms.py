@@ -211,3 +211,36 @@ class NotificationForm(forms.ModelForm):
             # ถ้าไม่ใช่ Admin องค์กร อาจจะซ่อนฟิลด์ dog ไปเลย
             self.fields['dog'].widget = forms.HiddenInput()
             self.fields['dog'].required = False
+            
+            
+class ReportLostForm(forms.ModelForm):
+    # 💡 เราจะแสดงฟิลด์เหล่านี้เป็น Input ที่ซ่อนไว้ (Hidden Input) 
+    # เพื่อให้ JavaScript ทำการบันทึกค่าพิกัดลงไป
+    lost_latitude = forms.DecimalField(
+        required=True, 
+        widget=forms.HiddenInput(), 
+        max_digits=9, 
+        decimal_places=6
+    )
+    lost_longitude = forms.DecimalField(
+        required=True, 
+        widget=forms.HiddenInput(), 
+        max_digits=9, 
+        decimal_places=6
+    )
+    
+    # ฟิลด์ที่ผู้ใช้เห็นและกรอก
+    lost_location_description = forms.CharField(
+        required=False, 
+        widget=forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full h-20', 'placeholder': 'อธิบายสถานที่สูญหายโดยสังเขป...'}),
+        label="รายละเอียดสถานที่สูญหายเพิ่มเติม"
+    )
+    
+    class Meta:
+        model = Dog
+        fields = [
+            'lost_latitude', 
+            'lost_longitude', 
+            'lost_location_description', 
+            # ไม่ต้องใส่ 'is_lost' เพราะเราจะกำหนดเป็น True ใน View
+        ]
