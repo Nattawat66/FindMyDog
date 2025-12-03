@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,12 +26,22 @@ SECRET_KEY = 'django-insecure-^eo&+zc8@%r*!22s)j7ttz18#=j*o(r7d()^g4-aor6l7cwk3d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.app",
+]
+
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".ngrok-free.app",   # อนุญาตทุกซับโดเมนของ ngrok
+]
+
 
 
 # Application definition
 LOGIN_URL = 'login'
-LOGOUT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'login'
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,8 +51,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "rest_framework",
     'myapp.apps.MyappConfig',  # ใช้ AppConfig เพื่อให้ signals ทำงาน
+    'tailwind',
+    'theme',
+    # 'django_browser_reload',
 ]
-
 MEDIA_ROOT = os.path.join(BASE_DIR,'dog_images')
 MEDIA_URL = '/dog_images/'
 
@@ -87,6 +100,12 @@ DATABASES = {
     }
 }
 
+# DATABASES = {
+#     'default': dj_database_url.parse(
+#         # "postgresql://postgres:wJTBwSaKjmwVPbiWJAwxhiVWXDGXrIxB@interchange.proxy.rlwy.net:19586/railway"
+#         "postgresql://postgres:boss123454@db.pckuwfauavyojghhmdzz.supabase.co:5432/postgres"
+#     )
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -123,6 +142,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

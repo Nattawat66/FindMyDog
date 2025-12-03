@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}แผนที่สุนัขสูญหาย{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@4.0.0/dist/geosearch.css"/>
+    <script src="https://unpkg.com/leaflet-geosearch@4.0.0/dist/geosearch.umd.js"></script>
+    <style>
+        #lostDogMap {
+            height: 700px; /* กำหนดความสูงของแผนที่ */
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">📍 แผนที่ค้นหาสุนัขสูญหาย</h1>
+    <p class="text-gray-600 mb-6">รูปสุนัขที่ปรากฏบนแผนที่คือจุดที่ผู้แจ้งรายงานว่าสุนัขสูญหาย</p>
+    <div class="flex flex-col md:flex-row gap-6">
+        
+        <div id="dogListSidebar" class="w-full md:w-1/4 bg-white p-4 rounded-xl shadow-lg border border-gray-100 overflow-y-auto" style="height: 700px;">
+            <h2 class="text-xl font-bold mb-4 text-indigo-700">รายชื่อสุนัขที่สูญหาย ({{ dogs_count }})</h2>
+            
+            <div id="dogsListContainer" class="space-y-3">
+                <p class="text-gray-500">กำลังโหลดรายชื่อ...</p>
+            </div>
+        </div>
+
+        <div id="lostDogMap" class="w-full md:w-3/4"></div>
+
+    </div>
+    <div id="lostDogMap"></div>
+</div>
+
+<script>
+    // 💡 ให้แน่ใจว่าได้ใช้ document.addEventListener เพื่อให้ DOM โหลดเสร็จก่อน
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- 1. Map Initialization (ส่วนเดิม) ---
+        const map = L.map('lostDogMap').setView([13.736717, 100.523186], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // --- 2. Geosearch Initialization (ส่วนค้นหาสถานที่) ---
+        const provider = new GeoSearch.OpenStreetMapProvider();
+        const searchControl = new GeoSearch.GeoSearchControl({
+            provider: provider,
+            style: 'bar',
+            showMarker: true,
+            showPopup: false,
+            autoClose: true,
+            retainZoomLevel: false,
+            animateZoom: true,
+            keepResult: true,
+            searchLabel: 'ค้นหาสถานที่...',
+        });
+        map.addControl(searchControl);
+
+        // --- 3. Setup List Variables ---
+        // ประกาศตัวแปรสำหรับ Sidebar และการโต้ตอบ
+        const dogListContainer = document.getElementById('dogsListContainer');
+        const markers = {}; // Dictionary เพื่อเก็บ Marker Objects ทั้งหมด
+        const allMarkers = []; // Array สำหรับเก็บ Marker เพื่อใช้ในการปรับขอบเขตแผนที่ (fitBounds)
+        
+        // แสดงข้อความกำลังโหลดเริ่มต้น
+        dogListContainer.innerHTML = '<p class="text-gray-500">กำลังโหลดข้อมูล...</p>';
+
+
+        // --- 4. Fetch Data and Render (รวม logic Marker และ List ไว้ใน Block เดียว) ---
+        fetch('{% url "lost_dogs_map_data_api" %}')
+            .then(response => {
+                if (!response.ok) {
+                    // ดักจับ HTTP Error (เช่น 404, 500)
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const dogs = data.dogs;
+                dogListContainer.innerHTML = ''; // ล้างข้อความ 'กำลังโหลด...'
+
+                // ถ้าไม่มีข้อมูล ให้แสดงข้อความแจ้งผู้ใช้
+                if (dogs.length === 0) {
+                    dogListContainer.innerHTML = '<p class="text-gray-500">ไม่พบข้อมูลสุนัขสูญหายในขณะนี้</p>';
+                    return; // ออกจากฟังก์ชัน
+                }
+                
+                dogs.forEach(dog => {
+                    
+                    // --- 4.1 สร้าง Custom Icon ---
+                    // ใช้ URL รูปภาพจริง หรือ Placeholder (กรุณาแทนที่ path/to/default/dog_image.png)
+                    const dogImageUrl = dog.image_url || '{% static "path/to/default/dog_image.png" %}'; 
+
+                    const customIcon = L.divIcon({
+                        className: 'lost-dog-marker',
+                        html: `
+                            <div class="relative flex flex-col items-center">
+                                <img src="${dogImageUrl}" class="rounded-full border-4 border-red-500 w-12 h-12 object-cover shadow-lg transform hover:scale-110 transition duration-150" alt="${dog.name}">
+                                <div class="mt-1 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-md whitespace-nowrap">${dog.name}</div>
+                                <div class="w-0 h-0 border-l-4 border-r-4 border-t-8 border-transparent border-t-red-500 -mt-1 z-10"></div>
+                            </div>
+                        `,
+                        iconSize: [48, 60],
+                        iconAnchor: [24, 60]
+                    });
+                    
+                    // --- 4.2 สร้างและเพิ่ม Marker ---
+                    const marker = L.marker([dog.lat, dog.lng], { icon: customIcon }).addTo(map);
+                    marker.bindPopup(`
+                        <div class="text-center font-bold">🚨 ${dog.name} สูญหาย!</div>
+                        <div class="mt-2 text-sm">Lat: ${dog.lat.toFixed(4)}, Lng: ${dog.lng.toFixed(4)}</div>
+                        <a href="${dog.detail_url}" class="btn btn-sm btn-block btn-primary mt-2">ดูรายละเอียด</a>
+                    `);
+                    
+                    // เก็บ Marker ไว้สำหรับการโต้ตอบและ fitBounds
+                    markers[dog.id] = marker; 
+                    allMarkers.push(marker);
+
+
+                    // --- 4.3 สร้าง List Item ใน Sidebar ---
+                    const listItem = document.createElement('div');
+                    listItem.className = 'list-item card card-side bg-base-100 shadow-md cursor-pointer hover:bg-gray-100 transition duration-150 border border-gray-200';
+                    
+                    listItem.innerHTML = `
+                        <figure class="w-16 h-16 m-2 rounded-lg overflow-hidden">
+                            <img src="${dogImageUrl}" alt="${dog.name}" class="object-cover w-full h-full"/>
+                        </figure>
+                        <div class="card-body p-3 flex flex-col justify-center">
+                            <p class="text-sm font-bold text-red-600">${dog.name}</p>
+                            <p class="text-xs text-gray-500">Lat: ${dog.lat.toFixed(4)}, Lng: ${dog.lng.toFixed(4)}</p>
+                        </div>
+                    `;
+                    
+                    // --- 4.4 เพิ่ม Event Listener (การคลิก List Item) ---
+                    listItem.addEventListener('click', () => {
+                        // เลื่อนแผนที่ไปที่พิกัดสุนัขและ Zoom เข้า (FlyTo ให้ดูนุ่มนวล)
+                        map.flyTo([dog.lat, dog.lng], 15); 
+                        
+                        // เปิด Popup ของ Marker นั้นๆ
+                        markers[dog.id].openPopup(); 
+                    });
+
+                    dogListContainer.appendChild(listItem);
+                });
+
+                // --- 5. ปรับแผนที่ให้เห็น Marker ทั้งหมด ---
+                if (allMarkers.length > 0) {
+                    const markerGroup = new L.featureGroup(allMarkers);
+                    map.fitBounds(markerGroup.getBounds().pad(0.5)); 
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching lost dog data:', error);
+                dogListContainer.innerHTML = '<p class="text-error">เกิดข้อผิดพลาดในการโหลดข้อมูลสุนัข</p>';
+                alert('ไม่สามารถโหลดข้อมูลสุนัขสูญหายได้ โปรดตรวจสอบ Console');
+            });
+    });
+</script>
+{% endblock %}

@@ -30,6 +30,7 @@
     </style>
     {% block extra_head %}{% endblock %}
 </head>
+
 <body class="bg-gray-50 min-h-screen">
 
     <nav class="navbar bg-base-200 shadow-md">
@@ -43,8 +44,9 @@
             <div class="flex-none">
                 <ul class="menu menu-horizontal px-1">
                     <li><a href="{% url 'home' %}">หน้าหลัก</a></li>
-                    <li><a href="#">ตามหาน้องหมา</a></li>
-                    <li><a href="#">รายงานพบ</a></li>
+                    <li><a href="{% url 'notification_list'%}">ข่าวสาร</a></li>
+                    <li><a href="{% url 'dog_all_list'%}">สุนัขทั้งหมด</a></li>
+                    <li><a href="{% url 'lost_dogs_map_view'%}">สุนัขที่สูญหาย</a></li>
                 </ul>
 
                 {% if user.is_authenticated %}
@@ -54,15 +56,17 @@
                                 {{ user.username.0|upper }}
                             </div>
                         </div>
+                        <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+                            {% csrf_token %}
+                        </form>
                         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><a href="#">โปรไฟล์</a></li>
+                            <li><a href="{% url 'user_profile' %}">โปรไฟล์</a></li>
                             <li><a href="{% url 'dog_list' %}">สุนัขของฉัน</a></li>
                             <li><a href="#">ตั้งค่า</a></li>
                             <li>
-                                <form action="{% url 'logout' %}" method="post" class="w-full">
-                                    {% csrf_token %} 
-                                    <button type="submit" class="w-full text-left ">ออกจากระบบ</button>
-                                </form>
+                                <button type="submit" form="logout-form" class="text-left w-full">
+                                    ออกจากระบบ
+                                </button>
                             </li>
                         </ul>
                     </div>
