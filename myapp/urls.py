@@ -21,6 +21,6 @@ urlpatterns = [
     path('notifications/<int:notification_id>/edit/', views.edit_notification_view, name='edit_notification'),
     path('notifications/<int:notification_id>/delete/', views.delete_notification_view, name='delete_notification'),
     path('dogs/<int:dog_id>/delete/', views.delete_dog_page, name='delete_dog_page'),
-    
+    path('profile/',views.user_profile_view,name='user_profile'),
     path('SetautoTraining/', views.set_auto_training, name='set_auto_training'),
 ]

@@ -59,7 +59,7 @@
                             {% csrf_token %}
                         </form>
                         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><a href="#">โปรไฟล์</a></li>
+                            <li><a href="{% url 'user_profile' %}">โปรไฟล์</a></li>
                             <li><a href="{% url 'dog_list' %}">สุนัขของฉัน</a></li>
                             <li><a href="#">ตั้งค่า</a></li>
                             <li>

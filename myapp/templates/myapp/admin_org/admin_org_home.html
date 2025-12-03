@@ -80,7 +80,7 @@
             </a>
         </div>
 
-        <h2 class="text-2xl font-bold text-gray-700 mb-4">สุนัขที่อยู่ในการดูแลล่าสุด</h2>
+        <h2 class="text-2xl font-bold text-gray-700 mb-4">สุนัขที่อยู่ในการดูแล</h2>
 
         <div class="bg-white shadow-xl rounded-lg p-6">
             
@@ -88,9 +88,8 @@
                 <div class="flex space-x-2">
                     <select class="select select-bordered select-sm">
                         <option selected>สถานะทั้งหมด</option>
-                        <option>รอรับเลี้ยง</option>
-                        <option>ได้รับการรับเลี้ยง</option>
-                        <option>อยู่ระหว่างรักษา</option>
+                        <option>สูญหาย</option>
+                        <option>ปกติ</option>
                     </select>
                     <input type="text" placeholder="ค้นหาชื่อ, รหัส..." class="input input-bordered input-sm w-full max-w-xs" />
                 </div>
@@ -115,7 +114,12 @@
                             <td>#{{ dog.id }}</td>
                             <td>{{ dog.name }}</td>
                             <td>{{ dog.age }} ปี</td>
-                            <td><span class="badge badge-success">{% if dog.is_lost %}สูญหาย{% else %}ปกติ{% endif %}</span></td>
+                            <td>
+                                {% if dog.is_lost %}
+                                    <span class="badge badge-error">สูญหาย</span></td>
+                                {% else %}
+                                    <span class="badge badge-success">ปกติ</span></td>
+                                {% endif %}
                             <td>{{ dog.size }}</td>
                             <td><a href="{% url 'dog_detail' dog.id %}" class="btn btn-xs btn-info">ดู/แก้ไข</a></td>
                         </tr>

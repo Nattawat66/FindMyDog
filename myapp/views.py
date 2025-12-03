@@ -515,3 +515,20 @@ def delete_notification_view(request, notification_id):
     
     # ถ้าเป็น GET request ให้ redirect กลับไปหน้า list
     return redirect('notification_list')
+
+@login_required
+def user_profile_view(request):
+    # ข้อมูลผู้ใช้ที่เข้าสู่ระบบจะอยู่ใน request.user
+    user = request.user
+    
+    # ถ้าคุณมี choices/mapping สำหรับ role
+    # เช่น ROLE_CHOICES = [('standard', 'ผู้ใช้ทั่วไป'), ('org_admin', 'ผู้ดูแลองค์กร')]
+    # คุณอาจต้องสร้างฟังก์ชันใน Custom User Model เพื่อดึง Role Display 
+    # user.get_role_display() 
+    
+    context = {
+        'user': user,
+        # สามารถเพิ่มข้อมูลอื่นๆ ที่ต้องการแสดงได้ที่นี่
+        'profile_title': "ข้อมูลส่วนตัวของฉัน",
+    }
+    return render(request, 'myapp/user/profile.html', context)

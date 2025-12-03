@@ -40,7 +40,7 @@
                     <div class="card-body">
                         <h2 class="card-title text-2xl text-primary-blue-custom">{{ dog.name }}</h2>
                         <p class="text-sm text-gray-600 mt-1">
-                            <span class="font-semibold">พันธุ์:</span> {{ dog.breed|default:'ไม่ระบุ' }} <br>
+                            {% comment %} <span class="font-semibold">พันธุ์:</span> {{ dog.breed|default:'ไม่ระบุ' }} <br> {% endcomment %}
                             <span class="font-semibold">เพศ:</span> {{ dog.get_gender_display }} <br>
                             <span class="">•</span> 
                             <span class="font-semibold">อายุ:</span> {{ dog.age }} ปี
