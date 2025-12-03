@@ -4,23 +4,19 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@4.0.0/dist/geosearch.css"/>
-    <script src="https://unpkg.com/leaflet-geosearch@4.0.0/dist/geosearch.umd.js"></script>
     <style>
         #lostMapPicker {
-            height: 500px; /* กำหนดความสูงของแผนที่ */
+            height: 500px;
             width: 100%;
             border-radius: 12px;
             margin-bottom: 20px;
         }
     </style>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCzKaYK3lurNwxZN1QrBg7OmFnvTfwXhQ&callback=initPickerMap&libraries=places"></script>
 {% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-    
     <header class="text-center mb-8">
         <h1 class="text-3xl font-extrabold text-red-600">🚨 {{ title }}</h1>
         <p class="text-lg text-gray-600 mt-2">โปรดปักหมุดในแผนที่เพื่อระบุตำแหน่งที่สุนัขสูญหายครั้งสุดท้าย</p>
@@ -30,7 +26,8 @@
         
         <form method="POST" action="{% url 'report_lost_dog' dog.id %}">
             {% csrf_token %}
-
+            <input type="text" id="map-search-input" placeholder="ค้นหาสถานที่บนแผนที่..." 
+            class="input input-bordered w-full mb-4 focus:ring-red-500 focus:border-red-500">
             <div id="lostMapPicker"></div>
 
             {{ form.lost_latitude }}
@@ -67,69 +64,92 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    var pickerMap;
+    var pickerMarker;
+
+    // 💡 ฟังก์ชันนี้ถูกเรียกเมื่อ Google API โหลดเสร็จ
+    function initPickerMap() {
         const latInput = document.getElementById('id_lost_latitude');
         const lngInput = document.getElementById('id_lost_longitude');
         const displayLat = document.getElementById('selected_lat');
         const displayLng = document.getElementById('selected_lng');
-        let marker = null;
         
         // 1. Initial Map Setup
-        // ใช้ค่าเริ่มต้นจากฟอร์ม (ถ้ามี) หรือตั้งค่าเริ่มต้นที่ใดที่หนึ่ง (เช่น กทม.)
         const initialLat = parseFloat(latInput.value) || 13.736717;
         const initialLng = parseFloat(lngInput.value) || 100.523186;
+        const initialPos = { lat: initialLat, lng: initialLng };
 
-        const map = L.map('lostMapPicker').setView([initialLat, initialLng], 13);
+        const input = document.getElementById("map-search-input");
+        const searchBox = new google.maps.places.SearchBox(input);
+        pickerMap = new google.maps.Map(document.getElementById('lostMapPicker'), {
+            center: { lat: 13.736717, lng: 100.523186 },
+            zoom: 13,
+            mapTypeControl: false,
+        });
+        pickerMap.addListener("bounds_changed", () => {
+            searchBox.setBounds(pickerMap.getBounds());
+        });
+        pickerMarker = new google.maps.Marker({
+            position: initialPos,
+            map: pickerMap,
+            draggable: true, // ทำให้หมุดลากได้
+            title: "จุดที่สุนัขสูญหาย"
+        });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        searchBox.addListener("places_changed", () => {
+            const places = searchBox.getPlaces();
+            if (places.length === 0) return;
 
-        // 2. Function to Update Form/Display
-        function updateMarker(lat, lng) {
-            // A. ลบ Marker เก่า (ถ้ามี)
-            if (marker) {
-                map.removeLayer(marker);
-            }
-            // B. เพิ่ม Marker ใหม่
-            marker = L.marker([lat, lng]).addTo(map);
-            
-            // C. บันทึกค่าลงใน Hidden Input
+            // ใช้สถานที่แรกที่ถูกเลือก
+            const place = places[0]; 
+            if (!place.geometry || !place.geometry.location) return;
+
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+
+            // 1. ย้ายแผนที่ไปที่ตำแหน่งที่ค้นหา
+            pickerMap.panTo(place.geometry.location);
+            pickerMap.setZoom(17); 
+
+            // 2. ย้ายหมุด
+            pickerMarker.setPosition(place.geometry.location);
+
+            // 3. อัพเดตค่าในฟอร์มและหน้าจอแสดงผล
+            updateCoordinates(lat, lng);
+        });
+
+        // อัพเดทพิกัดเริ่มต้น
+        updateCoordinates(initialLat, initialLng);
+        
+        // 3. Function to Update Form/Display
+        function updateCoordinates(lat, lng) {
             latInput.value = lat.toFixed(6);
             lngInput.value = lng.toFixed(6);
-
-            // D. แสดงค่าให้ผู้ใช้เห็น
             displayLat.textContent = lat.toFixed(6);
             displayLng.textContent = lng.toFixed(6);
+        }
+
+        // 4. Handle Marker Drag (ลากหมุด)
+        pickerMarker.addListener('dragend', (event) => {
+            const lat = event.latLng.lat();
+            const lng = event.latLng.lng();
+            updateCoordinates(lat, lng);
+            pickerMap.panTo({ lat: lat, lng: lng }); // เลื่อนแผนที่ตาม
+        });
+
+        // 5. Handle Map Click (คลิกเพื่อย้ายหมุด)
+        pickerMap.addListener('click', (event) => {
+            const lat = event.latLng.lat();
+            const lng = event.latLng.lng();
             
-            // E. เลื่อน Map ไปที่จุดที่ปัก
-            map.panTo([lat, lng]);
-        }
-        
-        // 3. Handle Initial Marker (ถ้ามีการโหลดพิกัดเก่ามา)
-        if (latInput.value && lngInput.value) {
-            updateMarker(initialLat, initialLng);
-        }
-
-        // 4. Handle Map Click Event (จุดสำคัญในการปักหมุด)
-        map.on('click', function(e) {
-            updateMarker(e.latlng.lat, e.latlng.lng);
+            // ย้าย Marker ไปยังจุดที่คลิก
+            pickerMarker.setPosition(event.latLng);
+            
+            updateCoordinates(lat, lng);
+            pickerMap.panTo({ lat: lat, lng: lng });
         });
-        const provider = new GeoSearch.OpenStreetMapProvider();
-        const searchControl = new GeoSearch.GeoSearchControl({
-            provider: provider,
-            style: 'bar',
-            showMarker: true,
-            showPopup: false,
-            autoClose: true,
-            retainZoomLevel: false,
-            animateZoom: true,
-            keepResult: true,
-            searchLabel: 'ค้นหาสถานที่...',
-        });
-        map.addControl(searchControl);
-    });
 
 
+    }
 </script>
 {% endblock %}
