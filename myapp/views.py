@@ -614,7 +614,7 @@ def lost_dogs_map_data(request):
             'lat': float(dog.lost_latitude),
             'lng': float(dog.lost_longitude),
             'image_url': image_url or '', # ถ้าไม่มีรูปภาพ ให้ส่งสตริงว่างไป
-            'detail_url': f'/dog/{dog.id}/detail/' # URL สำหรับหน้าดูรายละเอียดสุนัข
+            'detail_url': f'/dogs/{dog.id}' # URL สำหรับหน้าดูรายละเอียดสุนัข
         })
         
     return JsonResponse({'dogs': data})
