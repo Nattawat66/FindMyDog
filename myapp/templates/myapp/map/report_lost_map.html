@@ -1,155 +1,171 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}{{ title }}{% endblock %}
-
-{% block extra_head %}
-    <style>
-        #lostMapPicker {
-            height: 500px;
-            width: 100%;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-    </style>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCzKaYK3lurNwxZN1QrBg7OmFnvTfwXhQ&callback=initPickerMap&libraries=places"></script>
-{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% load static %} {% block title %}{{ title }}{%
+endblock %} {% block extra_head %}
+<style>
+  #lostMapPicker {
+    height: 500px;
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+</style>
+<script
+  async
+  defer
+  src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initPickerMap&libraries=places"
+></script>
+{% endblock %} {% block content %}
 <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-    <header class="text-center mb-8">
-        <h1 class="text-3xl font-extrabold text-red-600">🚨 {{ title }}</h1>
-        <p class="text-lg text-gray-600 mt-2">โปรดปักหมุดในแผนที่เพื่อระบุตำแหน่งที่สุนัขสูญหายครั้งสุดท้าย</p>
-    </header>
+  <header class="text-center mb-8">
+    <h1 class="text-3xl font-extrabold text-red-600">🚨 {{ title }}</h1>
+    <p class="text-lg text-gray-600 mt-2">
+      โปรดปักหมุดในแผนที่เพื่อระบุตำแหน่งที่สุนัขสูญหายครั้งสุดท้าย
+    </p>
+  </header>
 
-    <div class="bg-white p-6 rounded-xl shadow-2xl border border-gray-100">
-        
-        <form method="POST" action="{% url 'report_lost_dog' dog.id %}">
-            {% csrf_token %}
-            <input type="text" id="map-search-input" placeholder="ค้นหาสถานที่บนแผนที่..." 
-            class="input input-bordered w-full mb-4 focus:ring-red-500 focus:border-red-500">
-            <div id="lostMapPicker"></div>
+  <div class="bg-white p-6 rounded-xl shadow-2xl border border-gray-100">
+    <form method="POST" action="{% url 'report_lost_dog' dog.id %}">
+      {% csrf_token %}
+      <input
+        type="text"
+        id="map-search-input"
+        placeholder="ค้นหาสถานที่บนแผนที่..."
+        class="input input-bordered w-full mb-4 focus:ring-red-500 focus:border-red-500"
+      />
+      <div id="lostMapPicker"></div>
 
-            {{ form.lost_latitude }}
-            {{ form.lost_longitude }}
+      {{ form.lost_latitude }} {{ form.lost_longitude }}
 
-            <div class="form-control mb-4">
-                <label class="label"><span class="label-text font-bold">{{ form.lost_location_description.label }}</span></label>
-                {{ form.lost_location_description }}
-                {% if form.lost_location_description.errors %}<span class="text-error text-sm mt-1">{{ form.lost_location_description.errors }}</span>{% endif %}
+      <div class="form-control mb-4">
+        <label class="label"
+          ><span class="label-text font-bold"
+            >{{ form.lost_location_description.label }}</span
+          ></label
+        >
+        {{ form.lost_location_description }} {% if
+        form.lost_location_description.errors %}<span
+          class="text-error text-sm mt-1"
+          >{{ form.lost_location_description.errors }}</span
+        >{% endif %}
+      </div>
+
+      <div class="alert shadow-lg mb-6">
+        <div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            class="stroke-info flex-shrink-0 w-6 h-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <div>
+            <h3 class="font-bold">ตำแหน่งที่เลือก:</h3>
+            <div class="text-xs">
+              ละติจูด (Lat): <span id="selected_lat">โปรดคลิกบนแผนที่</span>
+              <span class="mx-2">|</span>
+              ลองจิจูด (Lng): <span id="selected_lng"></span>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="alert shadow-lg mb-6">
-                <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info flex-shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <div>
-                        <h3 class="font-bold">ตำแหน่งที่เลือก:</h3>
-                        <div class="text-xs">
-                            ละติจูด (Lat): <span id="selected_lat">โปรดคลิกบนแผนที่</span>
-                            <span class="mx-2">|</span> 
-                            ลองจิจูด (Lng): <span id="selected_lng"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-error btn-block btn-lg shadow-lg">
-                ยืนยันการแจ้งสุนัขสูญหาย
-            </button>
-            
-        </form>
-        
-    </div>
-
+      <button type="submit" class="btn btn-error btn-block btn-lg shadow-lg">
+        ยืนยันการแจ้งสุนัขสูญหาย
+      </button>
+    </form>
+  </div>
 </div>
 
 <script>
-    var pickerMap;
-    var pickerMarker;
+  var pickerMap;
+  var pickerMarker;
 
-    // 💡 ฟังก์ชันนี้ถูกเรียกเมื่อ Google API โหลดเสร็จ
-    function initPickerMap() {
-        const latInput = document.getElementById('id_lost_latitude');
-        const lngInput = document.getElementById('id_lost_longitude');
-        const displayLat = document.getElementById('selected_lat');
-        const displayLng = document.getElementById('selected_lng');
-        
-        // 1. Initial Map Setup
-        const initialLat = parseFloat(latInput.value) || 13.736717;
-        const initialLng = parseFloat(lngInput.value) || 100.523186;
-        const initialPos = { lat: initialLat, lng: initialLng };
+  // 💡 ฟังก์ชันนี้ถูกเรียกเมื่อ Google API โหลดเสร็จ
+  function initPickerMap() {
+    const latInput = document.getElementById("id_lost_latitude");
+    const lngInput = document.getElementById("id_lost_longitude");
+    const displayLat = document.getElementById("selected_lat");
+    const displayLng = document.getElementById("selected_lng");
 
-        const input = document.getElementById("map-search-input");
-        const searchBox = new google.maps.places.SearchBox(input);
-        pickerMap = new google.maps.Map(document.getElementById('lostMapPicker'), {
-            center: { lat: 13.736717, lng: 100.523186 },
-            zoom: 13,
-            mapTypeControl: false,
-        });
-        pickerMap.addListener("bounds_changed", () => {
-            searchBox.setBounds(pickerMap.getBounds());
-        });
-        pickerMarker = new google.maps.Marker({
-            position: initialPos,
-            map: pickerMap,
-            draggable: true, // ทำให้หมุดลากได้
-            title: "จุดที่สุนัขสูญหาย"
-        });
+    // 1. Initial Map Setup
+    const initialLat = parseFloat(latInput.value) || 13.736717;
+    const initialLng = parseFloat(lngInput.value) || 100.523186;
+    const initialPos = { lat: initialLat, lng: initialLng };
 
-        searchBox.addListener("places_changed", () => {
-            const places = searchBox.getPlaces();
-            if (places.length === 0) return;
+    const input = document.getElementById("map-search-input");
+    const searchBox = new google.maps.places.SearchBox(input);
+    pickerMap = new google.maps.Map(document.getElementById("lostMapPicker"), {
+      center: { lat: 13.736717, lng: 100.523186 },
+      zoom: 13,
+      mapTypeControl: false,
+    });
+    pickerMap.addListener("bounds_changed", () => {
+      searchBox.setBounds(pickerMap.getBounds());
+    });
+    pickerMarker = new google.maps.Marker({
+      position: initialPos,
+      map: pickerMap,
+      draggable: true, // ทำให้หมุดลากได้
+      title: "จุดที่สุนัขสูญหาย",
+    });
 
-            // ใช้สถานที่แรกที่ถูกเลือก
-            const place = places[0]; 
-            if (!place.geometry || !place.geometry.location) return;
+    searchBox.addListener("places_changed", () => {
+      const places = searchBox.getPlaces();
+      if (places.length === 0) return;
 
-            const lat = place.geometry.location.lat();
-            const lng = place.geometry.location.lng();
+      // ใช้สถานที่แรกที่ถูกเลือก
+      const place = places[0];
+      if (!place.geometry || !place.geometry.location) return;
 
-            // 1. ย้ายแผนที่ไปที่ตำแหน่งที่ค้นหา
-            pickerMap.panTo(place.geometry.location);
-            pickerMap.setZoom(17); 
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
 
-            // 2. ย้ายหมุด
-            pickerMarker.setPosition(place.geometry.location);
+      // 1. ย้ายแผนที่ไปที่ตำแหน่งที่ค้นหา
+      pickerMap.panTo(place.geometry.location);
+      pickerMap.setZoom(17);
 
-            // 3. อัพเดตค่าในฟอร์มและหน้าจอแสดงผล
-            updateCoordinates(lat, lng);
-        });
+      // 2. ย้ายหมุด
+      pickerMarker.setPosition(place.geometry.location);
 
-        // อัพเดทพิกัดเริ่มต้น
-        updateCoordinates(initialLat, initialLng);
-        
-        // 3. Function to Update Form/Display
-        function updateCoordinates(lat, lng) {
-            latInput.value = lat.toFixed(6);
-            lngInput.value = lng.toFixed(6);
-            displayLat.textContent = lat.toFixed(6);
-            displayLng.textContent = lng.toFixed(6);
-        }
+      // 3. อัพเดตค่าในฟอร์มและหน้าจอแสดงผล
+      updateCoordinates(lat, lng);
+    });
 
-        // 4. Handle Marker Drag (ลากหมุด)
-        pickerMarker.addListener('dragend', (event) => {
-            const lat = event.latLng.lat();
-            const lng = event.latLng.lng();
-            updateCoordinates(lat, lng);
-            pickerMap.panTo({ lat: lat, lng: lng }); // เลื่อนแผนที่ตาม
-        });
+    // อัพเดทพิกัดเริ่มต้น
+    updateCoordinates(initialLat, initialLng);
 
-        // 5. Handle Map Click (คลิกเพื่อย้ายหมุด)
-        pickerMap.addListener('click', (event) => {
-            const lat = event.latLng.lat();
-            const lng = event.latLng.lng();
-            
-            // ย้าย Marker ไปยังจุดที่คลิก
-            pickerMarker.setPosition(event.latLng);
-            
-            updateCoordinates(lat, lng);
-            pickerMap.panTo({ lat: lat, lng: lng });
-        });
-
-
+    // 3. Function to Update Form/Display
+    function updateCoordinates(lat, lng) {
+      latInput.value = lat.toFixed(6);
+      lngInput.value = lng.toFixed(6);
+      displayLat.textContent = lat.toFixed(6);
+      displayLng.textContent = lng.toFixed(6);
     }
+
+    // 4. Handle Marker Drag (ลากหมุด)
+    pickerMarker.addListener("dragend", (event) => {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      updateCoordinates(lat, lng);
+      pickerMap.panTo({ lat: lat, lng: lng }); // เลื่อนแผนที่ตาม
+    });
+
+    // 5. Handle Map Click (คลิกเพื่อย้ายหมุด)
+    pickerMap.addListener("click", (event) => {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+
+      // ย้าย Marker ไปยังจุดที่คลิก
+      pickerMarker.setPosition(event.latLng);
+
+      updateCoordinates(lat, lng);
+      pickerMap.panTo({ lat: lat, lng: lng });
+    });
+  }
 </script>
 {% endblock %}

@@ -6,3 +6,4 @@ pillow==11.3.0
 pytailwindcss==0.3.0
 sqlparse==0.5.3
 tzdata==2025.2
+python-dotenv==1.0.1
