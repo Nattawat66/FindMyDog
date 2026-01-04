@@ -46,4 +46,5 @@ urlpatterns = [
         views.lost_dogs_map_data, 
         name='lost_dogs_map_data_api'
     ),
+    path('matchdog/', views.matchdog, name='matchdog'),
 ]

@@ -618,3 +618,31 @@ def lost_dogs_map_data(request):
         })
         
     return JsonResponse({'dogs': data})
+
+
+
+@login_required
+def matchdog(request):
+    if request.method == 'POST':
+        # รับไฟล์ภาพ (แม้จะยังไม่ได้เอาไปเข้า AI จริงๆ)
+        image = request.FILES.get('image')
+        
+        # Mock: สุ่มสุนัขมา 5 ตัว
+        # order_by('?') เป็นการ random จาก database (ช้าถ้าข้อมูลเยอะ แต่สำหรับ mock ok)
+        search_results = list(Dog.objects.all().order_by('?')[:5])
+        
+        # Mock similarity score
+        import random
+        for dog in search_results:
+            dog.similarity_score = random.randint(60, 99)
+            
+        # เรียงลำดับตามความเหมือน (mock)
+        search_results.sort(key=lambda x: x.similarity_score, reverse=True)
+
+        context = {
+            'search_results': search_results,
+            'is_result': True, # Flag เพื่อบอก Template ว่าแสดงผลลัพธ์
+        }
+        return render(request, 'myapp/matchdog/matchdog.html', context)
+        
+    return render(request, 'myapp/matchdog/matchdog.html')
