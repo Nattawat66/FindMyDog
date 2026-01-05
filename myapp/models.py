@@ -230,3 +230,27 @@ class AdoptionParent(models.Model):
         
     def __str__(self):
         return f"{self.user.username} เป็นพ่อแม่บุญธรรมของ {self.dog.name}"
+
+class TrainingConfig(models.Model):
+
+    scheduled_time = models.CharField(max_length=5, default="00:00", help_text="Format: HH:MM (24h)")
+    
+    # เก็บความถี่
+    frequency = models.CharField(max_length=10, choices=[
+        ('daily', 'รายวัน'),
+        ('weekly', 'รายสัปดาห์'),
+        ('monthly', 'รายเดือน'),
+    ], default='daily')
+    
+    # เก็บสถานะว่าเปิดใช้งานการตั้งเวลาอยู่หรือไม่
+    is_active = models.BooleanField(default=True)
+    
+    # เก็บเวลาที่มีการแก้ไขข้อมูลล่าสุด
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Schedule at: {self.scheduled_time} (Active: {self.is_active})"
+
+    class Meta:
+        verbose_name = "Training Configuration"
+        verbose_name_plural = "Training Configurations"
