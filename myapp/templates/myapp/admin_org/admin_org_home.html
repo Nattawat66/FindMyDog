@@ -20,22 +20,31 @@
                 </div>
             </div>
             
-            {% comment %} <div class="card bg-green-600 text-white shadow-xl">
+            <div class="card bg-green-600 text-white shadow-xl">
                 <div class="card-body p-4 flex-row items-center">
-                    <span class="text-4xl">🏠</span>
+                    <span class="text-4xl">💉</span>
                     <div class="ml-4">
-                        <h2 class="card-title text-3xl">12</h2>
-                        <p class="text-sm">รอการรับเลี้ยง</p>
+                        <h2 class="card-title text-3xl">{{ dogs_org_vaccinated_count }}</h2>
+                        <p class="text-sm">สุนัขที่ได้รับวัคซีน</p>
                     </div>
                 </div>
-            </div> {% endcomment %}
+            </div> 
 
+            <div class="card bg-orange-500 text-white shadow-xl">
+                <div class="card-body p-4 flex-row items-center">
+                    <span class="text-4xl">🚨</span>
+                    <div class="ml-4">
+                        <h2 class="card-title text-3xl">{{ dogs_org_lost_count }}</h2>
+                        <p class="text-sm">สุนัขในโฮงเกลือหมาที่สูญหาย</p>
+                    </div>
+                </div>
+            </div>
             <div class="card bg-red-600 text-white shadow-xl">
                 <div class="card-body p-4 flex-row items-center">
                     <span class="text-4xl">🚨</span>
                     <div class="ml-4">
                         <h2 class="card-title text-3xl">{{ dogs_lost_count }}</h2>
-                        <p class="text-sm">สุนัขที่สูญหาย</p>
+                        <p class="text-sm">สุนัขทั้งหมดที่สูญหาย</p>
                     </div>
                 </div>
             </div>

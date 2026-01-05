@@ -3,10 +3,10 @@
 {% block title %}รายการสุนัขทั้งหมดในระบบ{% endblock %} 
 
 {% block content %}
-<div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+<div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 bg-white/90 rounded-xl">
     
     <header class="text-center mb-10">
-        <h1 class="text-4xl font-extrabold text-indigo-700 dark:text-indigo-400">
+        <h1 class="text-4xl font-extrabold text-black">
             <span class="inline-block align-middle">
                 {% comment %} <img src="/static/images/dog_icon.png" alt="Dog" class="w-10 h-10 mr-3"> {% endcomment %}
             </span>
@@ -59,7 +59,7 @@
     
     <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">รายการสุนัข</h2>
     
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="dog-list-container">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 " id="dog-list-container">
         {% for dog in dog_list %}
             {% include 'dog/dog_card.html' with dog=dog %}
         {% empty %}

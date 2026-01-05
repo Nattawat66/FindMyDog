@@ -3,16 +3,52 @@
 {% block title %}หน้าหลัก | Find my dog{% endblock %} 
 
 {% block content %}
-    
-    <div class="text-center">
-        <h2 class="text-3xl font-bold text-gray-800 mb-4">ยินดีต้อนรับสู่ชุมชน Find my dog!</h2>
-        <p class="text-lg text-gray-600">ที่นี่คือศูนย์รวมข้อมูลเพื่อตามหาน้องหมาที่หายไป</p>
-        
-        <div class="mt-8 space-x-4">
-            <a href="{% url 'register_dog_page' %}" class="btn btn-lg btn-info">ลงทะเบียนสุนัข</a>
-            <a href="{% url 'lost_dogs_map_view' %}" class="btn btn-lg btn-error">สุนัขที่สูญหาย</a>
+        <div class="flex justify-center ">
+            <div class="bg-white/90 rounded-xl">
+
+                <h2 class="text-5xl font-bold text-black mb-4 flex justify-center">ยินดีต้อนรับ</h2>
+                <p class="text-2xl font-semibold text-black mb-4 flex justify-center">เรามาช่วยกันตามหาน้องหมาที่หายไปไปกันเถอะ!</p>
+                
+                <div class="m-6 space-x-4">
+                    <a href="{% url 'register_dog_page' %}" class="btn btn-lg btn-info">ลงทะเบียนสุนัข</a>
+                    <a href="{% url 'matchdog' %}" class="btn btn-lg btn-warning">พบเจอสุนัขที่หลงทาง</a>
+                    <a href="{% url 'lost_dogs_map_view' %}" class="btn btn-lg btn-error">สุนัขที่สูญหาย</a>
+                </div>
+                
+            </div>
         </div>
-        
-    </div>
+
+        <!-- Latest Lost Dogs Section -->
+        {% comment %} <div class="mt-16 max-w-6xl mx-auto px-4"> {% endcomment %}
+        <div class ="mt-10">
+            <div class="flex justify-center">
+                <div class="text-center bg-white/90 rounded-xl p-6">
+                    <h3 class="text-3xl font-bold text-black mb-2">สุนัขที่กำลังสูญหาย</h3>
+                    <p class="text-xl font-semibold text-gray-700">
+                        มีน้องหมาหลายตัวที่กำหลังหลงทางและรอคอยเจ้าของมารับกลับบ้าน <br>
+                        หากคุณพบเห็นน้องหมาที่มีลักษณะคล้ายกัน โปรดแจ้งเบาะแสทันที
+                    </p>
+                    {% if recent_lost_dogs %}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 rounded-xl p-6">
+                            {% for dog in recent_lost_dogs %}
+                                {% include 'dog/dog_card.html' with dog=dog %}
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="text-center mt-8">
+                            <a href="{% url 'lost_dogs_map_view' %}" class="btn btn-lg btn-error">
+                                ดูรายการสุนัขสูญหายทั้งหมด
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-10 bg-base-200 rounded-xl">
+                            <p class="text-xl text-gray-500">🎉 ยังไม่มีรายงานสุนัขสูญหายล่าสุด</p>
+                            <p class="text-gray-400">ขอบคุณที่ช่วยกันดูแลสอดส่อง</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% comment %} </div> {% endcomment %}
 
 {% endblock %}

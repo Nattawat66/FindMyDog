@@ -323,10 +323,16 @@ def home(request):
             'dogs_org': Dog.objects.filter(organization=True),
             'dogs_org_count': Dog.objects.filter(organization=True).count(),
             'dogs_lost_count': Dog.objects.filter(is_lost=True).count(),
+            'dogs_org_lost_count': Dog.objects.filter(is_lost=True, organization=True).count(),
+            'dogs_org_vaccinated_count': Dog.objects.filter(vaccination_history__isnull=False, organization=True).count(),
         }
         return render(request, 'myapp/admin_org/admin_org_home.html',context)
     else:
-        return render(request, 'myapp/home.html')
+        recent_lost_dogs = Dog.objects.filter(is_lost=True).order_by('-id')[:5]
+        context = {
+            'recent_lost_dogs': recent_lost_dogs
+        }
+        return render(request, 'myapp/home.html', context)
 
 
 @login_required

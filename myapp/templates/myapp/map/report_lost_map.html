@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% load static %} {% block title %}{{ title }}{%
-endblock %} {% block extra_head %}
+{% extends "base.html" %} {% load static %} {% block title %}{{ title }}
+{%endblock %} {% block extra_head %}
 <style>
   #lostMapPicker {
     height: 500px;
@@ -41,8 +41,8 @@ endblock %} {% block extra_head %}
             >{{ form.lost_location_description.label }}</span
           ></label
         >
-        {{ form.lost_location_description }} {% if
-        form.lost_location_description.errors %}<span
+        {{ form.lost_location_description }} 
+        {% if form.lost_location_description.errors %}<span
           class="text-error text-sm mt-1"
           >{{ form.lost_location_description.errors }}</span
         >{% endif %}
