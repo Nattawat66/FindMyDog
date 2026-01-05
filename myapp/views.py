@@ -675,25 +675,24 @@ from .models import TrainingConfig
 from .forms import TrainingScheduleForm
 from django.core.cache import cache
 
+from .scheduler import update_scheduler
+
 def set_time_auto_training(request):
     config = TrainingConfig.objects.first()
-    print("Current Config:", config)
+
     if request.method == 'POST':
         form = TrainingScheduleForm(request.POST, instance=config)
-        print("Form Data:", request.POST)
-        print("Is Form Valid?:", form.is_valid())
-        print("Form Errors:", form.errors)
         if form.is_valid():
             obj = form.save()
-            print("Saved Config:", obj)
-            print("Saving config to cache:", obj.scheduled_time, obj.frequency, obj.is_active)
 
-            # อัปเดตค่าใน cache หลังจากบันทึกสำเร็จ
-            cache.set('AUTO_TRAIN_TIME', obj.scheduled_time, None)
-            cache.set('AUTO_TRAIN_FREQ', obj.frequency, None)
-            cache.set('AUTO_TRAIN_ACTIVE', obj.is_active, None)
+            cache.set("AUTO_TRAIN_TIME", obj.scheduled_time, None)
+            cache.set("AUTO_TRAIN_FREQ", obj.frequency, None)
+            cache.set("AUTO_TRAIN_ACTIVE", obj.is_active, None)
+
+            update_scheduler()  # รีโหลด scheduler ใหม่ทันที
+
             return redirect('set_auto_training')
-    else:
-        form = TrainingScheduleForm(instance=config)
+        else:
+            form = TrainingScheduleForm(instance=config)
 
-    return render(request, 'admin/Training/SetautoTraining.html', {'form': form})
+        return render(request, 'admin/Training/SetautoTraining.html', {'form': form})

@@ -59,7 +59,16 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     # 'django_browser_reload',
+    "django_crontab",
+    'django_apscheduler',
 ]
+
+AUTO_TRAIN_SECRET = os.getenv("AUTO_TRAIN_SECRET")
+
+# CRONJOBS = [
+#     ('*/1 * * * *', 'myapp.cron.my_scheduled_job', '>> /Users/macbookair/Documents/api-project/FindMyDog/cron_debug.log 2>&1')
+# ]
+
 MEDIA_ROOT = os.path.join(BASE_DIR,'dog_images')
 MEDIA_URL = '/dog_images/'
 

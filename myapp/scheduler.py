@@ -1,53 +1,35 @@
-# scheduler.py
-import time
-from datetime import datetime, date
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 from django.core.cache import cache
+from .tasks import retrain_model
+
+scheduler = BackgroundScheduler(timezone="Asia/Bangkok")
+
+def update_scheduler():
+    scheduler.remove_all_jobs()
+
+    active = cache.get("AUTO_TRAIN_ACTIVE", False)
+    time_str = cache.get("AUTO_TRAIN_TIME")  # "14:30"
+    freq = cache.get("AUTO_TRAIN_FREQ", "daily")
+
+    if not active or not time_str:
+        print("Scheduler: not active or no time set")
+        return
+
+    hour, minute = map(int, time_str.split(":"))
+
+    trigger = CronTrigger(hour=hour, minute=minute)
+
+    scheduler.add_job(
+        retrain_model,
+        trigger=trigger,
+        id="auto_retrain",
+        replace_existing=True
+    )
+
+    print(f"Scheduler set at {hour}:{minute} every day")
 
 def start_scheduler():
-    print("Scheduler started")
-    last_run = None
-
-    while True:
-        active = cache.get('AUTO_TRAIN_ACTIVE')
-        sched_time = cache.get('AUTO_TRAIN_TIME')
-        freq = cache.get('AUTO_TRAIN_FREQ')
-        print("Cache debug1:", active, sched_time, freq)
-        #ถ้า cache ว่าง โหลดจาก DB
-        if active is None or sched_time is None or freq is None:
-            try:
-                from .models import TrainingConfig 
-                cfg = TrainingConfig.objects.filter(is_active=True).first()
-                if cfg:
-                    active = cfg.is_active
-                    sched_time = cfg.scheduled_time
-                    freq = cfg.frequency
-
-                    cache.set('AUTO_TRAIN_ACTIVE', active, None)
-                    cache.set('AUTO_TRAIN_TIME', sched_time, None)
-                    cache.set('AUTO_TRAIN_FREQ', freq, None)
-
-                    print("Loaded from DB into cache:", active, sched_time, freq)
-            except Exception as e:
-                print("Fallback DB load failed:", e)
-
-        print("Cache:", active, sched_time, freq)
-
-        if active and sched_time:
-            from .tasks import retrain_model
-
-            now = datetime.now()
-            now_hm = now.strftime('%H:%M')
-    
-            should_run = (
-                (freq == 'daily' and now_hm == sched_time) or
-                (freq == 'weekly' and now.weekday() == 0 and now_hm == sched_time) or
-                (freq == 'monthly' and now.day == 1 and now_hm == sched_time)
-            )
-
-            if should_run and last_run != date.today():
-                print("Trigger retrain...")
-                retrain_model()
-                last_run = date.today()
-                print("Retrain completed.") 
-
-        time.sleep(20)
+    if not scheduler.running:
+        scheduler.start()
+        update_scheduler()
