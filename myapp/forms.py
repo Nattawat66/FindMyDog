@@ -33,10 +33,16 @@ class DogForm(forms.ModelForm):
         
         widgets = {
             # ใช้ Textarea สำหรับฟิลด์ข้อความหลายบรรทัด
-            'personality': forms.Textarea(attrs={'rows': 3}),
-            'favorite_food': forms.Textarea(attrs={'rows': 3}),
-            'allergies': forms.Textarea(attrs={'rows': 3}),
-            'distinguishing_marks': forms.Textarea(attrs={'rows': 3}),
+            'name': forms.TextInput(attrs={'placeholder': 'บัดดี้'}),
+            'age': forms.NumberInput(attrs={'placeholder': '2(หน่วยเป็นปี)'}),
+            'gender': forms.Select(attrs={'placeholder': 'เลือกเพศ'}),
+            'personality': forms.Textarea(attrs={'rows': 3, 'placeholder': 'ใจดี เป็นมิตร'}),
+            'favorite_food': forms.Textarea(attrs={'rows': 3, 'placeholder': 'ชอบกินโครงไก่'}),
+            'allergies': forms.Textarea(attrs={'rows': 3, 'placeholder': 'กินนมวัวไม่ได้'}),
+            'distinguishing_marks': forms.Textarea(attrs={'rows': 3, 'placeholder': 'หูตั้งตา2สี'}),
+            'primary_color': forms.TextInput(attrs={'placeholder': 'ดำ'}),
+            'secondary_color': forms.TextInput(attrs={'placeholder': 'น้ำตาล'}),
+            # 'size': forms.Select(attrs={'placeholder': 'เลือกขนาด'}),
         }
         
 
@@ -97,6 +103,16 @@ class OrgAdminDogForm(DogForm): # 💡 สืบทอดจาก DogForm เ�
             'sterilization_status': forms.Select(attrs={'class': 'select select-bordered w-full'}),
             # vaccination_history จะถูกซ่อน (hidden) และจัดการผ่าน vaccine_selection
             'vaccination_history': forms.HiddenInput(),
+                        'name': forms.TextInput(attrs={'placeholder': 'บัดดี้'}),
+            'age': forms.NumberInput(attrs={'placeholder': '2(หน่วยเป็นปี)'}),
+            'gender': forms.Select(attrs={'placeholder': 'เลือกเพศ'}),
+            'personality': forms.Textarea(attrs={'rows': 3, 'placeholder': 'ใจดี เป็นมิตร'}),
+            'favorite_food': forms.Textarea(attrs={'rows': 3, 'placeholder': 'ชอบกินโครงไก่'}),
+            'allergies': forms.Textarea(attrs={'rows': 3, 'placeholder': 'กินนมวัวไม่ได้'}),
+            'distinguishing_marks': forms.Textarea(attrs={'rows': 3, 'placeholder': 'หูตั้งตา2สี'}),
+            'primary_color': forms.TextInput(attrs={'placeholder': 'ดำ'}),
+            'secondary_color': forms.TextInput(attrs={'placeholder': 'น้ำตาล'}),
+            
         }
 
 
@@ -195,3 +211,66 @@ class NotificationForm(forms.ModelForm):
             # ถ้าไม่ใช่ Admin องค์กร อาจจะซ่อนฟิลด์ dog ไปเลย
             self.fields['dog'].widget = forms.HiddenInput()
             self.fields['dog'].required = False
+            
+            
+class ReportLostForm(forms.ModelForm):
+    # 💡 เราจะแสดงฟิลด์เหล่านี้เป็น Input ที่ซ่อนไว้ (Hidden Input) 
+    # เพื่อให้ JavaScript ทำการบันทึกค่าพิกัดลงไป
+    lost_latitude = forms.DecimalField(
+        required=True, 
+        widget=forms.HiddenInput(), 
+        max_digits=9, 
+        decimal_places=6
+    )
+    lost_longitude = forms.DecimalField(
+        required=True, 
+        widget=forms.HiddenInput(), 
+        max_digits=9, 
+        decimal_places=6
+    )
+    
+    # ฟิลด์ที่ผู้ใช้เห็นและกรอก
+    lost_location_description = forms.CharField(
+        required=False, 
+        widget=forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full h-20', 'placeholder': 'อธิบายสถานที่สูญหายโดยสังเขป...'}),
+        label="รายละเอียดสถานที่สูญหายเพิ่มเติม"
+    )
+    
+    class Meta:
+        model = Dog
+        fields = [
+            'lost_latitude', 
+            'lost_longitude', 
+            'lost_location_description', 
+            # ไม่ต้องใส่ 'is_lost' เพราะเราจะกำหนดเป็น True ใน View
+        ]
+
+
+# forms.py
+# forms.py
+from django import forms
+from .models import TrainingConfig
+import re
+
+# forms.py
+from django import forms
+from .models import TrainingConfig
+import re
+
+class TrainingScheduleForm(forms.ModelForm):
+    class Meta:
+        model = TrainingConfig
+        fields = ['scheduled_time', 'frequency', 'is_active']
+
+        widgets = {
+            'scheduled_time': forms.TimeInput(attrs={'class': 'input input-bordered w-full', 'type': 'time'}),
+            'frequency': forms.Select(attrs={'class': 'select select-bordered w-full'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+        }
+
+    def clean_scheduled_time(self):
+        v = self.cleaned_data['scheduled_time']
+        if not re.match(r'^\d{2}:\d{2}$', v):
+            raise forms.ValidationError("ใช้รูปแบบ HH:MM")
+        return v
+

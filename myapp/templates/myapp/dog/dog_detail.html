@@ -104,37 +104,17 @@
                         </label>
                     </div>
                 </div>
-                {% if role == 'org_admin' %}
+                {% if is_org %}
                     <h2 class="text-2xl font-bold text-gray-700 mt-8 mb-4 border-t pt-4">ข้อมูลสุขภาพและการจัดการ (สำหรับผู้ดูแล)</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        <div>
-                            <label class="label"><span class="label-text">สถานะการควบคุมกำเนิด (ทำหมัน)</span></label>
-                            {{ form.sterilization_status }}
-                            {% if form.sterilization_status.errors %}<p class="text-error text-sm">{{ form.sterilization_status.errors }}</p>{% endif %}
-                        </div>
-    
-                        <div>
-                            <label class="label"><span class="label-text">วันที่ดำเนินการล่าสุด</span></label>
-                            {{ form.sterilization_date }}
-                            {% if form.sterilization_date.errors %}<p class="text-error text-sm">{{ form.sterilization_date.errors }}</p>{% endif %}
-                        </div>
-                        
+                    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">สถานะการควบคุมกำเนิด (ทำหมัน)</h2>
+                        <div class="form-control">{{ form.sterilization_status.label_tag }}{{ form.sterilization_status }}</div>
+                        <div class="form-control">{{ form.sterilization_date.label_tag }}{{ form.sterilization_date }}</div>
                     </div>
-    
-                    <div class="form-control mt-4 p-4 border rounded-lg bg-gray-50">
-                        <label class="label"><span class="label-text text-lg font-semibold">วัคซีนที่ฉีดแล้ว</span></label>
-                        
-                        {{ form.vaccine_selection }} 
-                        
-                        {% if form.vaccine_selection.errors %}
-                            <p class="text-error text-sm mt-2">{{ form.vaccine_selection.errors }}</p>
-                        {% endif %}
+                    <div class="bg-base-100 p-6 rounded-lg border border-gray-200">
+                        <h2 class="text-xl font-semibold text-primary-blue-custom mb-4">วัคซีนที่ฉีดแล้ว</h2>
+                        <div class="form-control">{{ form.vaccine_selection.label_tag }}{{ form.vaccine_selection }}</div>
                     </div>
-    
-                    {{ form.vaccination_history }} 
-                    
                 {% endif %}
 
 
@@ -300,6 +280,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l4.125-4.125a1.875 1.875 0 112.652 2.652l-4.125 4.125a4.5 4.5 0 01-1.897 1.13L6 18l-2.685-.8a4.5 4.5 0 01-1.13-1.897l4.125-4.125a1.875 1.875 0 112.652-2.652L16.862 4.487z" />
                         </svg>
                         แก้ไขข้อมูล
+                    </a>
+                    <a href="{% url 'report_lost_dog' dog.id %}" class="btn btn-error text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                        แจ้งสูญหาย
                     </a>
                     <button onclick="delete_modal.showModal()" class="btn btn-error text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">

@@ -12,8 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file at project root (same level as manage.py)
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -36,7 +41,8 @@ ALLOWED_HOSTS = [
     ".ngrok-free.app",   # อนุญาตทุกซับโดเมนของ ngrok
 ]
 
-
+# Google Maps API key (loaded from .env)
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
 
 # Application definition
 LOGIN_URL = 'login'
@@ -53,7 +59,16 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     # 'django_browser_reload',
+    "django_crontab",
+    'django_apscheduler',
 ]
+
+AUTO_TRAIN_SECRET = os.getenv("AUTO_TRAIN_SECRET")
+
+# CRONJOBS = [
+#     ('*/1 * * * *', 'myapp.cron.my_scheduled_job', '>> /Users/macbookair/Documents/api-project/FindMyDog/cron_debug.log 2>&1')
+# ]
+
 MEDIA_ROOT = os.path.join(BASE_DIR,'dog_images')
 MEDIA_URL = '/dog_images/'
 
@@ -68,7 +83,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+    
 ROOT_URLCONF = 'findmydog.urls'
 
 TEMPLATES = [
@@ -81,6 +96,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'myapp.context_processors.google_maps_api_key',
             ],
         },
     },
@@ -92,13 +108,30 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'my_django_db',     
+        'USER': 'macbookair',      
+        'PASSWORD': '',            
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
+# DATABASES = {
+#     'default': dj_database_url.parse(
+#         # "postgresql://postgres:wJTBwSaKjmwVPbiWJAwxhiVWXDGXrIxB@interchange.proxy.rlwy.net:19586/railway"
+#         "postgresql://postgres:boss123454@db.pckuwfauavyojghhmdzz.supabase.co:5432/postgres"
+#     )
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

@@ -320,6 +320,166 @@ function initDropzoneFormset(options) {
   return dropzone;
 }
 
+/**
+ * Dropzone สำหรับอัปโหลดไฟล์เดี่ยว ให้ผูกกับ input file เดิม (เช่น Notification.image)
+ *
+ * ตัวอย่างการใช้งานใน template:
+ * <input type="file" name="image" id="id_image" style="display:none;">
+ * <div id="dropzone-area"></div>
+ * <div id="image-preview"></div>
+ *
+ * <script>
+ *   initDropzoneSingle({
+ *     dropzoneId: 'dropzone-area',
+ *     previewContainerId: 'image-preview',
+ *     inputId: 'id_image',
+ *     formId: 'notification-form',
+ *     maxFiles: 1,
+ *   });
+ * </script>
+ */
+function initDropzoneSingle(options) {
+  const config = {
+    dropzoneId: "dropzone-area",
+    previewContainerId: "image-preview",
+    inputId: "id_image",
+    formId: null,
+    maxFiles: 1,
+    acceptedFiles: "image/*",
+    ...options,
+  };
+
+  if (typeof Dropzone === "undefined") {
+    console.log("Waiting for Dropzone.js to load (single)...");
+    setTimeout(() => initDropzoneSingle(config), 100);
+    return;
+  }
+
+  Dropzone.autoDiscover = false;
+
+  const dropzoneElement = document.getElementById(config.dropzoneId);
+  if (!dropzoneElement) {
+    console.error(`Dropzone element not found: #${config.dropzoneId}`);
+    return;
+  }
+
+  const fileInput = document.getElementById(config.inputId);
+  if (!fileInput) {
+    console.error(`File input not found: #${config.inputId}`);
+    return;
+  }
+
+  if (dropzoneElement.dropzone) {
+    dropzoneElement.dropzone.destroy();
+  }
+
+  let currentFile = null;
+
+  let dropzone;
+  try {
+    dropzone = new Dropzone(`#${config.dropzoneId}`, {
+      url: "#",
+      autoProcessQueue: false,
+      addRemoveLinks: false,
+      maxFiles: config.maxFiles,
+      acceptedFiles: config.acceptedFiles,
+      dictDefaultMessage: "",
+      dictMaxFilesExceeded: "สามารถอัปโหลดได้เพียง 1 รูปภาพ",
+      clickable: true,
+      init: function () {
+        const dz = this;
+
+        dz.on("addedfile", function (file) {
+          // จำกัดให้มีได้เพียงไฟล์เดียว
+          if (currentFile) {
+            dz.removeFile(currentFile);
+          }
+          currentFile = file;
+          updateInput();
+          updatePreview();
+        });
+
+        dz.on("removedfile", function (file) {
+          if (file === currentFile) {
+            currentFile = null;
+            clearInput();
+            updatePreview();
+          }
+        });
+
+        dz.on("error", function (file, message) {
+          console.error("Dropzone (single) error:", message);
+          alert("เกิดข้อผิดพลาด: " + message);
+        });
+      },
+    });
+  } catch (error) {
+    console.error("Error creating Dropzone (single):", error);
+    alert("เกิดข้อผิดพลาดในการสร้าง Dropzone: " + error.message);
+    return;
+  }
+
+  function updateInput() {
+    if (!currentFile) return;
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(currentFile);
+    fileInput.files = dataTransfer.files;
+  }
+
+  function clearInput() {
+    fileInput.value = "";
+  }
+
+  function updatePreview() {
+    const previewContainer = document.getElementById(config.previewContainerId);
+    if (!previewContainer) {
+      console.error(
+        `Preview container not found: #${config.previewContainerId}`
+      );
+      return;
+    }
+
+    previewContainer.innerHTML = "";
+
+    if (!currentFile) return;
+
+    const previewDiv = document.createElement("div");
+    previewDiv.className = "relative";
+
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(currentFile);
+    img.className = "w-full h-32 object-cover rounded-md border";
+    img.alt = "Preview";
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className =
+      "absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600";
+    removeBtn.innerHTML = "×";
+    removeBtn.onclick = function () {
+      dropzone.removeFile(currentFile);
+    };
+
+    previewDiv.appendChild(img);
+    previewDiv.appendChild(removeBtn);
+    previewContainer.appendChild(previewDiv);
+  }
+
+  if (config.formId) {
+    const form = document.getElementById(config.formId);
+    if (form) {
+      form.addEventListener("submit", function () {
+        // ให้แน่ใจว่า input มีไฟล์ล่าสุดก่อน submit
+        if (currentFile) {
+          updateInput();
+        }
+      });
+    }
+  }
+
+  return dropzone;
+}
+
 // Auto-initialize เมื่อ DOM พร้อม (ถ้าไม่มีการเรียกใช้เอง)
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", function () {

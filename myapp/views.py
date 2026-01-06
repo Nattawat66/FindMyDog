@@ -1,17 +1,15 @@
 
-from .forms import DogForm, DogImageFormSet,OrgAdminDogForm,VACCINE_CHOICES,NotificationForm
+from .forms import DogForm, DogImageFormSet,OrgAdminDogForm,VACCINE_CHOICES,NotificationForm,ReportLostForm
 from django.shortcuts import render, redirect ,get_object_or_404
 from django.http import Http404
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
-
-from .models import Dog, DogImage, User, Organization
-
-from .models import Dog, DogImage, User, Organization,Notification, AdoptionParent
+from .models import Dog, DogImage, User,Organization,Notification, AdoptionParent
 from django.db.models import Q
 from django.db import models
+from django.http import JsonResponse
 
 
 # ---------- UI Render Views ----------
@@ -43,6 +41,7 @@ def dog_list(request):
 @login_required
 def dog_detail(request, dog_id):
     # Admin (is_staff) สามารถดูได้ทุกตัว, User ทั่วไป (is_staff=False) ดูได้แค่ของตัวเอง
+    is_org = request.user.role == 'org_admin'
     if request.user.is_staff:
         # Admin: ไม่ต้องมีเงื่อนไข owner
         # ใช้ .get() แทน .filter() เพื่อให้เกิด 404 หากไม่พบ ID
@@ -67,6 +66,9 @@ def dog_detail(request, dog_id):
             # ไม่ใช่เจ้าของ: ดูได้แต่แก้ไขไม่ได้
             can_edit = False
 
+    # กำหนด Form class ตามสิทธิ์
+    DogFormClass = OrgAdminDogForm if is_org else DogForm
+
     # ตรวจสอบว่าอยู่ในโหมดแก้ไขหรือไม่
     is_edit_mode = request.GET.get('edit', 'false').lower() == 'true' and can_edit
     
@@ -76,7 +78,7 @@ def dog_detail(request, dog_id):
             messages.error(request, 'คุณไม่มีสิทธิ์แก้ไขข้อมูลสุนัขตัวนี้')
             return redirect('dog_detail', dog_id=dog.id)
         # ⚠️ การแก้ไข: ต้องส่ง instance=dog เพื่อให้ฟอร์มโหลดข้อมูลเดิมมาแก้ไข
-        form = DogForm(request.POST, instance=dog)
+        form = DogFormClass(request.POST, instance=dog)
         # ⚠️ สำหรับ FormSet: ต้องส่ง request.FILES และ instance=dog ด้วย
         formset = DogImageFormSet(request.POST, request.FILES, instance=dog) 
 
@@ -107,7 +109,7 @@ def dog_detail(request, dog_id):
         # --- สำหรับการแสดงผล/เปิดฟอร์มแก้ไข (Initial Load) ---
         
         # 5. โหลดข้อมูลสุนัขเดิมเข้าสู่ฟอร์ม
-        form = DogForm(instance=dog) 
+        form = DogFormClass(instance=dog) 
         
         # 6. โหลดรูปภาพที่มีอยู่เดิมเข้าสู่ FormSet
         formset = DogImageFormSet(instance=dog) 
@@ -141,6 +143,7 @@ def dog_detail(request, dog_id):
         'is_edit_mode': is_edit_mode, # ส่งสถานะโหมดแก้ไข
         'can_edit': can_edit, # ส่งสิทธิ์การแก้ไข
         'vaccine_display_list': vaccine_display_list,
+        'is_org': is_org,
     }
     return render(request, 'myapp/dog/dog_detail.html', context)
 
@@ -190,12 +193,7 @@ def register_dog_page(request):
         'formset': formset,
         'role' : role,
     }
-
-    return render(request, 'myapp/registerdog.html', context)
-
-
     return render(request, 'myapp/dog/registerdog.html', context)
-
 @csrf_protect
 def register(request):
     if request.method == 'POST':
@@ -231,7 +229,7 @@ def register(request):
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
             return render(request, 'myapp/registeruser.html')
     
-    return render(request, 'myapp/registeruser.html')
+    return render(request, 'myapp/authen/registeruser.html')
 
 # from django.contrib.admin.views.decorators import staff_member_required
 
@@ -251,15 +249,12 @@ def login(request):
             messages.error(request, 'กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน')
             return render(request, 'myapp/loginuser.html')
         
-        if user.is_active == False:
-            messages.error(request, 'บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน')
-            return render(request, 'myapp/loginuser.html')
-        
-        if user.is_staff:
-            return redirect('admin_page')
-            # return render(request, 'admin/index.html')
-
         if user is not None:
+            if user.is_staff:
+                return redirect('admin_page')
+            if user.is_active == False:
+                messages.error(request, 'บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน')
+                return render(request, 'myapp/loginuser.html')
             auth_login(request, user)
             # messages.success(request, f'ยินดีต้อนรับ {user.username}!')
             # Redirect ไปที่หน้าแรกหรือหน้าที่ต้องการ
@@ -271,10 +266,10 @@ def login(request):
                 return redirect('home')  # ใช้ชื่อ URL pattern แทน path
         else:
             messages.error(request, 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง')
-            return render(request, 'myapp/loginuser.html')
-    
-    return render(request, 'myapp/authen/loginuser.html')
+            return redirect('login')
+        
 
+    return render(request, 'myapp/authen/loginuser.html')
 
 # @login_required
 # def admin_page(request):
@@ -286,7 +281,57 @@ def admin_page(request):
     return render(request, 'admin/dashdoardAI/dashdoard.html')
 
 def set_auto_training(request):
-    return render(request, 'admin/Training/SetautoTraining.html')
+    from datetime import datetime, time
+    from django.utils import timezone
+    import pytz
+    
+    config = TrainingConfig.objects.first()
+    countdown_seconds = None
+    next_training_time = None
+    
+    if config and config.scheduled_time:
+        try:
+            # แยกชั่วโมงและนาทีจาก scheduled_time
+            hour, minute = map(int, config.scheduled_time.split(':'))
+            
+            # สร้างเวลาปัจจุบันและเป้าหมาย
+            now = timezone.now()
+            today = now.date()
+            
+            # สร้างเวลาเป้าหมายสำหรับวันนี้
+            target_time_today = timezone.make_aware(
+                datetime.combine(today, time(hour, minute))
+            )
+            
+            # ถ้าเวลาปัจจุบันเลยเวลาเป้าหมายแล้ว ให้คำนวณเป็นวันถัดไป
+            if now >= target_time_today:
+                if config.frequency == 'daily':
+                    target_time_today = target_time_today + timezone.timedelta(days=1)
+                elif config.frequency == 'weekly':
+                    target_time_today = target_time_today + timezone.timedelta(weeks=1)
+                elif config.frequency == 'monthly':
+                    # คำนวณเดือนถัดไป (แบบง่าย)
+                    next_month = today.month + 1 if today.month < 12 else 1
+                    next_year = today.year if today.month < 12 else today.year + 1
+                    target_time_today = target_time_today.replace(year=next_year, month=next_month)
+            
+            next_training_time = target_time_today
+            countdown_seconds = int((target_time_today - now).total_seconds())
+            
+        except (ValueError, AttributeError):
+            pass
+    
+    # ตรวจสอบสถานะ cache
+    cache_triggered = cache.get('training_triggered', False)
+    
+    context = {
+        'config': config,
+        'countdown_seconds': countdown_seconds,
+        'next_training_time': next_training_time,
+        'cache_triggered': cache_triggered,
+    }
+    
+    return render(request, 'admin/Training/SetautoTraining.html', context)
 
 def my_login_view(request)  :
     if request.method == 'POST':
@@ -310,10 +355,10 @@ def my_login_view(request)  :
 @login_required
 def dog_all_list(request):
     context = {
-        'total_dogs': 50,
-        'lost_dogs': 5,
-        'org_dogs': 25,
-        'vaccinated_dogs': 0,
+        'total_dogs': Dog.objects.all().count(),
+        'lost_dogs': Dog.objects.filter(is_lost=True).count(),
+        'org_dogs': Dog.objects.filter(organization=True).count(),
+        # 'vaccinated_dogs': Dog.objects.filter(vaccinated=True).count(),
         'dog_list': Dog.objects.all(), # ใช้ QuerySet จริงใน production
     }
     return render(request, 'myapp/dog/dog_all_list.html',context)
@@ -324,7 +369,12 @@ def home(request):
     if request.user.is_staff:
         return render(request, 'myapp/admin_backend/admin_home.html')
     elif role == 'org_admin':
-        return render(request, 'myapp/admin_org/admin_org_home.html')
+        context = {
+            'dogs_org': Dog.objects.filter(organization=True),
+            'dogs_org_count': Dog.objects.filter(organization=True).count(),
+            'dogs_lost_count': Dog.objects.filter(is_lost=True).count(),
+        }
+        return render(request, 'myapp/admin_org/admin_org_home.html',context)
     else:
         return render(request, 'myapp/home.html')
 
@@ -515,3 +565,134 @@ def delete_notification_view(request, notification_id):
     
     # ถ้าเป็น GET request ให้ redirect กลับไปหน้า list
     return redirect('notification_list')
+
+@login_required
+def user_profile_view(request):
+    # ข้อมูลผู้ใช้ที่เข้าสู่ระบบจะอยู่ใน request.user
+    user = request.user
+    
+    # ถ้าคุณมี choices/mapping สำหรับ role
+    # เช่น ROLE_CHOICES = [('standard', 'ผู้ใช้ทั่วไป'), ('org_admin', 'ผู้ดูแลองค์กร')]
+    # คุณอาจต้องสร้างฟังก์ชันใน Custom User Model เพื่อดึง Role Display 
+    # user.get_role_display() 
+    
+    context = {
+        'user': user,
+        # สามารถเพิ่มข้อมูลอื่นๆ ที่ต้องการแสดงได้ที่นี่
+        'profile_title': "ข้อมูลส่วนตัวของฉัน",
+    }
+    return render(request, 'myapp/user/profile.html', context)
+
+
+
+
+
+@login_required # หรือไม่ใส่ก็ได้ ขึ้นอยู่กับว่าคุณต้องการให้ใครเห็นแผนที่บ้าง
+def lost_dogs_map_view(request):
+
+    context = {
+        'map_title': "แผนที่ค้นหาสุนัขสูญหาย",
+    }
+    return render(request, 'myapp/map/map.html', context)
+
+
+
+@login_required
+def report_lost_dog_view(request, dog_id):
+    dog = get_object_or_404(Dog, pk=dog_id)
+    
+    # 💡 [ตรวจสอบสิทธิ์]: อนุญาตเฉพาะเจ้าของสุนัขหรือ Org Admin ที่ดูแลเท่านั้น
+    if dog.owner != request.user and dog.organization != request.user:
+        messages.error(request, "คุณไม่มีสิทธิ์ในการแจ้งสูญหายสุนัขตัวนี้")
+        return redirect('dog_detail', dog_id=dog_id)
+
+    if request.method == 'POST':
+        # ใช้ instance เพื่ออัปเดต Dog object เดิม
+        form = ReportLostForm(request.POST, instance=dog)
+        if form.is_valid():
+            lost_dog = form.save(commit=False)
+            
+            # กำหนดสถานะ is_lost เป็น True
+            lost_dog.is_lost = True 
+            
+            lost_dog.save()
+            
+            messages.success(request, f"แจ้งสูญหายสุนัข {dog.name} เรียบร้อยแล้ว! ตำแหน่งถูกบันทึกในแผนที่.")
+            return redirect('dog_detail', dog_id=dog_id)
+    else:
+        # 💡 ส่งค่า initial จาก Dog object เดิม (ถ้าเคยมีพิกัดอยู่แล้ว)
+        form = ReportLostForm(instance=dog) 
+
+    context = {
+        'dog': dog,
+        'form': form,
+        'title': f"ปักหมุดแจ้งสูญหาย: {dog.name}",
+    }
+    return render(request, 'myapp/map/report_lost_map.html', context)
+
+
+def lost_dogs_map_data(request):
+    
+    # 1. ดึงข้อมูลสุนัขที่สูญหายและมีพิกัด
+    # ใช้ prefetch_related('images') เพื่อโหลดรูปภาพ DogImage เข้ามาพร้อมกัน
+    lost_dogs_queryset = Dog.objects.filter(
+        is_lost=True, 
+        lost_latitude__isnull=False, 
+        lost_longitude__isnull=False
+    ).prefetch_related('images') # 💡 (สมมติ: related_name คือ 'images')
+
+    data = []
+    
+    for dog in lost_dogs_queryset:
+        image_url = None
+        
+        # 2. เข้าถึงรูปภาพแรก
+        # เทียบเท่ากับการใช้ dog.images.first() ใน Template
+        first_image = dog.images.first() 
+        
+        if first_image and first_image.image:
+            # 3. สร้าง URL รูปภาพที่สมบูรณ์จาก ImageField
+            # (สมมติ: ฟิลด์รูปภาพใน DogImage คือ 'image')
+            # request.build_absolute_uri จำเป็นสำหรับ URL รูปภาพที่ถูกต้อง
+            image_url = request.build_absolute_uri(first_image.image.url)
+        
+        # 4. ประกอบข้อมูล JSON
+        data.append({
+            'id': dog.id,
+            'name': dog.name,
+            # แปลง DecimalField เป็น float
+            'lat': float(dog.lost_latitude),
+            'lng': float(dog.lost_longitude),
+            'image_url': image_url or '', # ถ้าไม่มีรูปภาพ ให้ส่งสตริงว่างไป
+            'detail_url': f'/dogs/{dog.id}' # URL สำหรับหน้าดูรายละเอียดสุนัข
+        })
+        
+    return JsonResponse({'dogs': data})
+
+#model managements  
+from django.shortcuts import render, redirect
+from .models import TrainingConfig
+from .forms import TrainingScheduleForm
+from django.core.cache import cache
+
+from .scheduler import update_scheduler
+
+def set_time_auto_training(request):
+    config = TrainingConfig.objects.first()
+
+    if request.method == 'POST':
+        form = TrainingScheduleForm(request.POST, instance=config)
+        if form.is_valid():
+            obj = form.save()
+
+            cache.set("AUTO_TRAIN_TIME", obj.scheduled_time, None)
+            cache.set("AUTO_TRAIN_FREQ", obj.frequency, None)
+            cache.set("AUTO_TRAIN_ACTIVE", obj.is_active, None)
+
+            update_scheduler()  # รีโหลด scheduler ใหม่ทันที
+
+            return redirect('set_auto_training')
+        else:
+            form = TrainingScheduleForm(instance=config)
+
+        return render(request, 'admin/Training/SetautoTraining.html', {'form': form})

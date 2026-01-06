@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import User, Organization, Dog, DogImage, LostDogReport, FoundDogReport, FoundDogImage
+from .models import User, Dog, DogImage, LostDogReport, FoundDogReport, FoundDogImage, AdoptionParent,TrainingConfig
 
 
 @admin.register(User)
@@ -17,9 +17,9 @@ class DogAdmin(admin.ModelAdmin):
     list_display = ("name", "age", "owner", "organization")
     search_fields = ("name", "owner__username", "organization__name")
 
-
-admin.site.register(Organization)
 admin.site.register(DogImage)
 admin.site.register(LostDogReport)
 admin.site.register(FoundDogReport)
 admin.site.register(FoundDogImage)
+admin.site.register(AdoptionParent)
+admin.site.register(TrainingConfig)

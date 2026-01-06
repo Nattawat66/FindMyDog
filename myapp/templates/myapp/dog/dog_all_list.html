@@ -8,7 +8,7 @@
     <header class="text-center mb-10">
         <h1 class="text-4xl font-extrabold text-indigo-700 dark:text-indigo-400">
             <span class="inline-block align-middle">
-                <img src="/static/images/dog_icon.png" alt="Dog" class="w-10 h-10 mr-3">
+                {% comment %} <img src="/static/images/dog_icon.png" alt="Dog" class="w-10 h-10 mr-3"> {% endcomment %}
             </span>
             รายการสุนัขทั้งหมด
         </h1>
@@ -17,7 +17,7 @@
 
     <div class="flex flex-col md:flex-row gap-4 mb-6">
         <div class="flex-grow">
-            <input type="text" placeholder="🔍 ค้นหา ชื่อ, สายพันธุ์, หรือ องค์กร..." 
+            <input type="text" placeholder="🔍 ค้นหา ชื่อ หรือ องค์กร..." 
                    class="input input-bordered w-full input-lg shadow-sm">
         </div>
         <div>
@@ -30,13 +30,13 @@
         </div>
     </div>
 
-    <div role="tablist" class="tabs tabs-boxed mb-8 text-sm sm:text-base shadow-lg">
+    {% comment %} <div role="tablist" class="tabs tabs-boxed mb-8 text-sm sm:text-base shadow-lg">
         <a role="tab" class="tab tab-active">ทั้งหมด ({{ total_dogs }})</a>
         <a role="tab" class="tab">✅ สุขภาพดี ({{ healthy_dogs }})</a>
         <a role="tab" class="tab">🆘 สูญหาย ({{ lost_dogs }})</a>
         <a role="tab" class="tab">💉 รับวัคซีนแล้ว ({{ vaccinated_dogs }})</a>
         <a role="tab" class="tab">🏘️ องค์กรดูแล ({{ org_dogs }})</a>
-    </div>
+    </div> {% endcomment %}
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         <div class="stat bg-blue-500 text-white rounded-xl shadow-lg p-4">
@@ -47,14 +47,14 @@
             <div class="stat-value text-3xl">{{ org_dogs }}</div>
             <div class="stat-title text-white">องค์กรดูแล</div>
         </div>
-        <div class="stat bg-pink-500 text-white rounded-xl shadow-lg p-4">
-            <div class="stat-value text-3xl">0</div>
-            <div class="stat-title text-white">พร้อมรับเลี้ยง</div>
+        <div class="stat bg-red-500 text-white rounded-xl shadow-lg p-4">
+            <div class="stat-value text-3xl">{{ lost_dogs }}</div>
+            <div class="stat-title text-white">สูญหาย</div>
         </div>
-        <div class="stat bg-green-500 text-white rounded-xl shadow-lg p-4">
+        {% comment %} <div class="stat bg-green-500 text-white rounded-xl shadow-lg p-4">
             <div class="stat-value text-3xl">{{ vaccinated_dogs }}</div>
             <div class="stat-title text-white">ฉีดวัคซีนแล้ว</div>
-        </div>
+        </div> {% endcomment %}
     </div>
     
     <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">รายการสุนัข</h2>
