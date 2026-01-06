@@ -83,7 +83,7 @@
                         listItem.addEventListener('click', () => {
                             const selectedMarker = markers[dog.id];
                             map.panTo(selectedMarker.getPosition()); 
-                            map.setZoom(15); 
+                            map.setZoom(12); 
                             
                             infoWindow.setContent(infoContent);
                             infoWindow.open(map, selectedMarker);
