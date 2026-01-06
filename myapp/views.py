@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
-from .models import Dog, DogImage, User,Organization,Notification, AdoptionParent
+from .models import Dog, DogImage, User,Notification, AdoptionParent
 from django.db.models import Q
 from django.db import models
 from django.http import JsonResponse
