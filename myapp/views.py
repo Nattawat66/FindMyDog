@@ -1,5 +1,5 @@
 
-from .forms import DogForm, DogImageFormSet,OrgAdminDogForm,VACCINE_CHOICES,NotificationForm,ReportLostForm
+from .forms import DogForm, DogImageFormSet,OrgAdminDogForm,VACCINE_CHOICES,NotificationForm,ReportLostForm,TrainingScheduleForm
 from django.shortcuts import render, redirect ,get_object_or_404
 from django.http import Http404
 from django.contrib.auth import authenticate, login as auth_login
@@ -10,8 +10,16 @@ from .models import Dog, DogImage, User,Notification, AdoptionParent
 from django.db.models import Q
 from django.db import models
 from django.http import JsonResponse
-
-
+import requests
+import base64
+import os
+from .models import TrainingConfig
+from django.core.cache import cache
+from .scheduler import update_scheduler
+import requests
+import numpy as np
+from django.http import JsonResponse
+from django.contrib.admin.views.decorators import staff_member_required
 # ---------- UI Render Views ----------
 @login_required
 def dog_list(request):
@@ -83,28 +91,92 @@ def dog_detail(request, dog_id):
         formset = DogImageFormSet(request.POST, request.FILES, instance=dog) 
 
         if form.is_valid() and formset.is_valid():
-            # 2. บันทึก Dog Model หลัก
             dog = form.save()
-            
-            # 3. บันทึกรูปภาพที่เกี่ยวข้อง (จัดการการลบ/แก้ไข/เพิ่มรูปภาพ)
-            # formset.save() จะลบ objects ที่ถูก mark ให้ลบ และ signal จะลบไฟล์ให้อัตโนมัติ
-            formset.save() 
-            
-            # 4. แสดงข้อความสำเร็จและ Redirect กลับไปหน้าแสดงผล
-            # messages.success(request, f'แก้ไขข้อมูลสุนัข "{dog.name}" สำเร็จแล้ว!')
-            return redirect('dog_detail', dog_id=dog.id) 
-        else:
-            # ถ้ามี error ให้อยู่ในโหมดแก้ไข
-            is_edit_mode = True
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(request, f'{field}: {error}')
-            if not formset.is_valid():
-                for form_error in formset.errors:
-                    for field, errors in form_error.items():
-                        for error in errors:
-                            messages.error(request, f'รูปภาพ: {error}')
+
+            # ⬇️ ยังไม่ save formset ทันที
+            instances = formset.save(commit=False)
+
+            # รูปที่ต้องส่งไป embedding
+            images_for_embedding = []
+
+            for obj in instances:
+                is_new = obj.pk is None
+
+                if not is_new:
+                    # เช็คว่าไฟล์รูปถูกเปลี่ยนไหม
+                    old = DogImage.objects.get(pk=obj.pk)
+                    image_changed = old.image != obj.image
+                else:
+                    image_changed = True
+
+                obj.dog = dog
+                obj.save()
+
+                if image_changed:
+                    images_for_embedding.append(obj)
+
+            # handle deleted images
+            for obj in formset.deleted_objects:
+                obj.delete()
+
+            # ===============================
+            # 🔗 Call Embedding API เฉพาะรูปที่เปลี่ยน
+            # ===============================
+            if images_for_embedding:
+                url = "https://3f03a05d7b85.ngrok-free.app/embedding-image/"
+
+                files = []
+                for img in images_for_embedding:
+                    img.image.open('rb')
+                    files.append((
+                        'files',
+                        (
+                            os.path.basename(img.image.name),
+                            img.image.file
+                        )
+                    ))
+
+                try:
+                    response = requests.post(
+                        url,
+                        data={'dog_id': dog.id},
+                        files=files,
+                        timeout=60
+                    )
+                except requests.RequestException as e:
+                    print("❌ Embedding API error:", e)
+                finally:
+                    for img in images_for_embedding:
+                        img.image.close()
+
+                if response.status_code == 200:
+                    results = response.json().get('results', [])
+
+                    image_map = {
+                        os.path.basename(img.image.name): img
+                        for img in images_for_embedding
+                    }
+
+                    for item in results:
+                        file_name = os.path.basename(item.get('file_name', ''))
+                        embedding_base64 = item.get('embedding_bytes')
+
+                        if not embedding_base64 or file_name not in image_map:
+                            continue
+
+                        if ',' in embedding_base64:
+                            embedding_base64 = embedding_base64.split(',')[-1]
+
+                        embedding_binary = base64.b64decode(embedding_base64)
+
+                        dog_image = image_map[file_name]
+                        dog_image.embedding_binary = embedding_binary
+                        dog_image.save()
+
+                        print("✅ Updated embedding:", file_name)
+
+            return redirect('dog_detail', dog_id=dog.id)
+
     else:
         # --- สำหรับการแสดงผล/เปิดฟอร์มแก้ไข (Initial Load) ---
         
@@ -168,22 +240,62 @@ def register_dog_page(request):
 
             # 2. บันทึกรูปภาพที่เกี่ยวข้อง - ต้องส่ง instance=dog ก่อน
             formset.instance = dog
-            formset.save()  # Django FormSet จะจัดการ empty forms ให้เอง
+            formset.save()
+            dog_images = DogImage.objects.filter(dog=dog)
+            url = "https://3f03a05d7b85.ngrok-free.app/embedding-image/"
+
+            files = []
+            for img in dog_images:
+                img.image.open('rb')
+                files.append((
+                    'files',
+                    (
+                        os.path.basename(img.image.name),
+                        img.image.file
+                    )
+                ))
+
+            data = {'dog_id': dog.id}
+
+            try:
+                response = requests.post(url, data=data, files=files, timeout=60)
+            except requests.RequestException as e:
+                print("❌ Embedding API error:", e)
+                return redirect('dog_list')
+
+            finally:
+                for img in dog_images:
+                    img.image.close()
+
+            if response.status_code == 200:
+                results = response.json().get('results', [])
+
+                image_map = {
+                    os.path.basename(img.image.name): img
+                    for img in dog_images
+                }
+
+                for item in results:
+                    file_name = os.path.basename(item.get('file_name', ''))
+                    embedding_base64 = item.get('embedding_bytes')
+
+                    if not embedding_base64 or file_name not in image_map:
+                        continue
+
+                    if ',' in embedding_base64:
+                        embedding_base64 = embedding_base64.split(',')[-1]
+
+                    embedding_binary = base64.b64decode(embedding_base64)
+
+                    dog_image = image_map[file_name]
+                    dog_image.embedding_binary = embedding_binary
+                    dog_image.save()
+
+                    print("✅ Saved embedding:", file_name)
             
             # 3. แสดงข้อความสำเร็จและ Redirect
             # messages.success(request, f'ลงทะเบียนสุนัข "{dog.name}" สำเร็จแล้ว!')
             return redirect('dog_list')
-        else:
-            # แสดง error messages ถ้ามี
-            if not form.is_valid():
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(request, f'{field}: {error}')
-            if not formset.is_valid():
-                for form_error in formset.errors:
-                    for field, errors in form_error.items():
-                        for error in errors:
-                            messages.error(request, f'รูปภาพ: {error}') 
     else:
         form = DogFormClass()
         formset = DogImageFormSet(queryset=DogImage.objects.none()) # ฟอร์มเซ็ตเปล่า
@@ -281,7 +393,57 @@ def admin_page(request):
     return render(request, 'admin/dashdoardAI/dashdoard.html')
 
 def set_auto_training(request):
-    return render(request, 'admin/Training/SetautoTraining.html')
+    from datetime import datetime, time
+    from django.utils import timezone
+    import pytz
+    
+    config = TrainingConfig.objects.first()
+    countdown_seconds = None
+    next_training_time = None
+    
+    if config and config.scheduled_time:
+        try:
+            # แยกชั่วโมงและนาทีจาก scheduled_time
+            hour, minute = map(int, config.scheduled_time.split(':'))
+            
+            # สร้างเวลาปัจจุบันและเป้าหมาย
+            now = timezone.now()
+            today = now.date()
+            
+            # สร้างเวลาเป้าหมายสำหรับวันนี้
+            target_time_today = timezone.make_aware(
+                datetime.combine(today, time(hour, minute))
+            )
+            
+            # ถ้าเวลาปัจจุบันเลยเวลาเป้าหมายแล้ว ให้คำนวณเป็นวันถัดไป
+            if now >= target_time_today:
+                if config.frequency == 'daily':
+                    target_time_today = target_time_today + timezone.timedelta(days=1)
+                elif config.frequency == 'weekly':
+                    target_time_today = target_time_today + timezone.timedelta(weeks=1)
+                elif config.frequency == 'monthly':
+                    # คำนวณเดือนถัดไป (แบบง่าย)
+                    next_month = today.month + 1 if today.month < 12 else 1
+                    next_year = today.year if today.month < 12 else today.year + 1
+                    target_time_today = target_time_today.replace(year=next_year, month=next_month)
+            
+            next_training_time = target_time_today
+            countdown_seconds = int((target_time_today - now).total_seconds())
+            
+        except (ValueError, AttributeError):
+            pass
+    
+    # ตรวจสอบสถานะ cache
+    cache_triggered = cache.get('training_triggered', False)
+    
+    context = {
+        'config': config,
+        'countdown_seconds': countdown_seconds,
+        'next_training_time': next_training_time,
+        'cache_triggered': cache_triggered,
+    }
+    
+    return render(request, 'admin/Training/SetautoTraining.html', context)
 
 def my_login_view(request)  :
     if request.method == 'POST':
@@ -652,3 +814,61 @@ def matchdog(request):
         return render(request, 'myapp/matchdog/matchdog.html', context)
         
     return render(request, 'myapp/matchdog/matchdog.html')
+#model managements  
+
+
+def set_time_auto_training(request):
+    config = TrainingConfig.objects.first()
+
+    if request.method == 'POST':
+        form = TrainingScheduleForm(request.POST, instance=config)
+        if form.is_valid():
+            obj = form.save()
+
+            cache.set("AUTO_TRAIN_TIME", obj.scheduled_time, None)
+            cache.set("AUTO_TRAIN_FREQ", obj.frequency, None)
+            cache.set("AUTO_TRAIN_ACTIVE", obj.is_active, None)
+
+            update_scheduler()  # รีโหลด scheduler ใหม่ทันที
+
+            return redirect('set_auto_training')
+        else:
+            form = TrainingScheduleForm(instance=config)
+
+        return render(request, 'admin/Training/SetautoTraining.html', {'form': form})
+
+
+
+
+
+@staff_member_required
+def train_knn_view(request):
+    images = DogImage.objects.exclude(embedding_binary__isnull=True)
+
+    train_data = []
+
+    for img in images:
+        embedding_b64 = base64.b64encode(
+            img.embedding_binary
+        ).decode("utf-8")
+
+        train_data.append({
+            "dog_id": img.dog_id,
+            "embedding_b64": embedding_b64   # ✅ ชื่อตรง
+        })
+
+    if not train_data:
+        return JsonResponse(
+            {"status": "error", "message": "ไม่มี embedding"},
+            status=400
+        )
+
+    response = requests.post(
+        "https://3f03a05d7b85.ngrok-free.app/train-knn/",
+        json={"data": train_data},
+        timeout=120
+    )
+
+    return JsonResponse(response.json(), status=response.status_code)
+
+

@@ -59,7 +59,16 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     # 'django_browser_reload',
+    "django_crontab",
+    'django_apscheduler',
 ]
+
+AUTO_TRAIN_SECRET = os.getenv("AUTO_TRAIN_SECRET")
+
+# CRONJOBS = [
+#     ('*/1 * * * *', 'myapp.cron.my_scheduled_job', '>> /Users/macbookair/Documents/api-project/FindMyDog/cron_debug.log 2>&1')
+# ]
+
 MEDIA_ROOT = os.path.join(BASE_DIR,'dog_images')
 MEDIA_URL = '/dog_images/'
 
@@ -74,7 +83,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+    
 ROOT_URLCONF = 'findmydog.urls'
 
 TEMPLATES = [
@@ -103,6 +112,27 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
 #         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+\
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "mydb",
+        "USER": "admin",
+        "PASSWORD": "1234",
+        "HOST": "localhost",
+        "PORT": "5432",
+    }
+}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'my_django_db',     
+#         'USER': 'macbookair',      
+#         'PASSWORD': '',            
+#         'HOST': '127.0.0.1',
+#         'PORT': '5432',
 #     }
 # }
 
