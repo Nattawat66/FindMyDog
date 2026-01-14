@@ -254,3 +254,4 @@ class TrainingConfig(models.Model):
     class Meta:
         verbose_name = "Training Configuration"
         verbose_name_plural = "Training Configurations"
+        

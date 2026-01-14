@@ -63,6 +63,14 @@ INSTALLED_APPS = [
     'django_apscheduler',
 ]
 
+CRONJOBS = [
+    (
+        '0 2 * * *',  # ตี 2 ทุกวัน (แนะนำกว่ารันทุกนาที)
+        'myapp.serverFast.trainKNN',
+        '>> /home/jaruvitgitant/Documents/Project_findmydog/Webapp/FindMyDog/cron_debug.log 2>&1'
+    ),
+]
+
 AUTO_TRAIN_SECRET = os.getenv("AUTO_TRAIN_SECRET")
 
 # CRONJOBS = [
@@ -118,9 +126,9 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'my_django_db',     
-        'USER': 'macbookair',      
-        'PASSWORD': '',            
+        'NAME': 'project_db_name',     
+        'USER': 'postgres',      
+        'PASSWORD': '1234',            
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
