@@ -45,6 +45,10 @@ ALLOWED_HOSTS = [
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
 
 # Application definition
+
+TRAIN_KNN_HOUR = 2      # เทรนตอนตี 2
+TRAIN_KNN_MINUTE = 0 
+
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
 INSTALLED_APPS = [
@@ -59,7 +63,18 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     # 'django_browser_reload',
+    "django_crontab",
+    "django_apscheduler",
 ]
+
+CRONJOBS = [
+    (
+        '0 2 * * *',  # ตี 2 ทุกวัน (แนะนำกว่ารันทุกนาที)
+        'myapp.serverFast.trainKNN',
+        '>> /home/jaruvitgitant/Documents/Project_findmydog/Webapp/FindMyDog/cron_debug.log 2>&1'
+    ),
+]
+
 MEDIA_ROOT = os.path.join(BASE_DIR,'dog_images')
 MEDIA_URL = '/dog_images/'
 
@@ -116,8 +131,8 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "mydb",
-        "USER": "admin",
+        "NAME": "project_db_name",
+        "USER": "postgres",
         "PASSWORD": "1234",
         "HOST": "localhost",
         "PORT": "5432",

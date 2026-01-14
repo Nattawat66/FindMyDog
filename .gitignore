@@ -9,3 +9,5 @@ db.sqlite3
 __pycache__/
 *.pyc
 *.log
+
+dog_images

@@ -10,6 +10,21 @@ from .models import Dog, DogImage, User,Notification, AdoptionParent
 from django.db.models import Q
 from django.db import models
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+from .serverFast import trainKNN
+
+def setTrainKnn(request):
+    return render(request, 'admin/Training/set_trainKNN.html')
+
+@csrf_exempt  # หรือใช้ CSRF token จาก frontend
+def trigger_train_knn(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "detail": "POST only"}, status=405)
+
+    result = trainKNN()
+    return JsonResponse(result)
+
 
 
 # ---------- UI Render Views ----------

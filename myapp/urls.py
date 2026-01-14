@@ -47,4 +47,7 @@ urlpatterns = [
         name='lost_dogs_map_data_api'
     ),
     path('matchdog/', views.matchdog, name='matchdog'),
+
+    path('set_trainKNN/', views.setTrainKnn, name='trainKnn'),
+    path('trainKNN/', views.trigger_train_knn, name='trainKNN')
 ]
