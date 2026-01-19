@@ -244,3 +244,33 @@ class ReportLostForm(forms.ModelForm):
             'lost_location_description', 
             # ไม่ต้องใส่ 'is_lost' เพราะเราจะกำหนดเป็น True ใน View
         ]
+
+
+# forms.py
+# forms.py
+from django import forms
+from .models import TrainingConfig
+import re
+
+# forms.py
+from django import forms
+from .models import TrainingConfig
+import re
+
+class TrainingScheduleForm(forms.ModelForm):
+    class Meta:
+        model = TrainingConfig
+        fields = ['scheduled_time', 'frequency', 'is_active']
+
+        widgets = {
+            'scheduled_time': forms.TimeInput(attrs={'class': 'input input-bordered w-full', 'type': 'time'}),
+            'frequency': forms.Select(attrs={'class': 'select select-bordered w-full'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+        }
+
+    def clean_scheduled_time(self):
+        v = self.cleaned_data['scheduled_time']
+        if not re.match(r'^\d{2}:\d{2}$', v):
+            raise forms.ValidationError("ใช้รูปแบบ HH:MM")
+        return v
+

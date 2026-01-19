@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import User, Dog, DogImage, LostDogReport, FoundDogReport, FoundDogImage, AdoptionParent
+from .models import User, Dog, DogImage, LostDogReport, FoundDogReport, FoundDogImage, AdoptionParent,TrainingConfig
 
 
 @admin.register(User)
@@ -22,3 +22,4 @@ admin.site.register(LostDogReport)
 admin.site.register(FoundDogReport)
 admin.site.register(FoundDogImage)
 admin.site.register(AdoptionParent)
+admin.site.register(TrainingConfig)

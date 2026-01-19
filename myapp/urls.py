@@ -2,6 +2,7 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
+# from .views import debug_cache
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -48,6 +49,11 @@ urlpatterns = [
     ),
     path('matchdog/', views.matchdog, name='matchdog'),
 
+    # URL สำหรับเกี่ยวกับจัดการ model
+    path('model/retrain/', views.set_time_auto_training, name='retrain_model'),
+    # path("debug/cache/", debug_cache),
     path('set_trainKNN/', views.setTrainKnn, name='trainKnn'),
     path('trainKNN/', views.trigger_train_knn, name='trainKNN')
-]
+    
+    ]
+

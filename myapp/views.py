@@ -12,6 +12,7 @@ from django.db import models
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+
 from .serverFast import trainKNN
 
 def setTrainKnn(request):
@@ -24,7 +25,6 @@ def trigger_train_knn(request):
 
     result = trainKNN()
     return JsonResponse(result)
-
 
 
 # ---------- UI Render Views ----------
@@ -296,7 +296,57 @@ def admin_page(request):
     return render(request, 'admin/dashdoardAI/dashdoard.html')
 
 def set_auto_training(request):
-    return render(request, 'admin/Training/SetautoTraining.html')
+    from datetime import datetime, time
+    from django.utils import timezone
+    import pytz
+    
+    config = TrainingConfig.objects.first()
+    countdown_seconds = None
+    next_training_time = None
+    
+    if config and config.scheduled_time:
+        try:
+            # แยกชั่วโมงและนาทีจาก scheduled_time
+            hour, minute = map(int, config.scheduled_time.split(':'))
+            
+            # สร้างเวลาปัจจุบันและเป้าหมาย
+            now = timezone.now()
+            today = now.date()
+            
+            # สร้างเวลาเป้าหมายสำหรับวันนี้
+            target_time_today = timezone.make_aware(
+                datetime.combine(today, time(hour, minute))
+            )
+            
+            # ถ้าเวลาปัจจุบันเลยเวลาเป้าหมายแล้ว ให้คำนวณเป็นวันถัดไป
+            if now >= target_time_today:
+                if config.frequency == 'daily':
+                    target_time_today = target_time_today + timezone.timedelta(days=1)
+                elif config.frequency == 'weekly':
+                    target_time_today = target_time_today + timezone.timedelta(weeks=1)
+                elif config.frequency == 'monthly':
+                    # คำนวณเดือนถัดไป (แบบง่าย)
+                    next_month = today.month + 1 if today.month < 12 else 1
+                    next_year = today.year if today.month < 12 else today.year + 1
+                    target_time_today = target_time_today.replace(year=next_year, month=next_month)
+            
+            next_training_time = target_time_today
+            countdown_seconds = int((target_time_today - now).total_seconds())
+            
+        except (ValueError, AttributeError):
+            pass
+    
+    # ตรวจสอบสถานะ cache
+    cache_triggered = cache.get('training_triggered', False)
+    
+    context = {
+        'config': config,
+        'countdown_seconds': countdown_seconds,
+        'next_training_time': next_training_time,
+        'cache_triggered': cache_triggered,
+    }
+    
+    return render(request, 'admin/Training/SetautoTraining.html', context)
 
 def my_login_view(request)  :
     if request.method == 'POST':
@@ -641,7 +691,6 @@ def lost_dogs_map_data(request):
     return JsonResponse({'dogs': data})
 
 
-
 @login_required
 def matchdog(request):
     if request.method == 'POST':
@@ -667,3 +716,32 @@ def matchdog(request):
         return render(request, 'myapp/matchdog/matchdog.html', context)
         
     return render(request, 'myapp/matchdog/matchdog.html')
+#model managements  
+
+#model managements  
+from django.shortcuts import render, redirect
+from .models import TrainingConfig
+from .forms import TrainingScheduleForm
+from django.core.cache import cache
+
+from .scheduler import update_scheduler
+
+def set_time_auto_training(request):
+    config = TrainingConfig.objects.first()
+
+    if request.method == 'POST':
+        form = TrainingScheduleForm(request.POST, instance=config)
+        if form.is_valid():
+            obj = form.save()
+
+            cache.set("AUTO_TRAIN_TIME", obj.scheduled_time, None)
+            cache.set("AUTO_TRAIN_FREQ", obj.frequency, None)
+            cache.set("AUTO_TRAIN_ACTIVE", obj.is_active, None)
+
+            update_scheduler()  # รีโหลด scheduler ใหม่ทันที
+
+            return redirect('set_auto_training')
+        else:
+            form = TrainingScheduleForm(instance=config)
+
+        return render(request, 'admin/Training/SetautoTraining.html', {'form': form})

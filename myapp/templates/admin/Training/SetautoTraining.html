@@ -1,48 +1,167 @@
 {% extends 'admin/baseAI.html' %}
 
-{% block title %}
-Set Auto Training Schedule
-{% endblock %}
+{% block title %}Set Auto Training Schedule{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h1 class="text-2xl font-bold text-gray-800 mb-4">ตั้งค่าตารางการฝึกอบรมอัตโนมัติ</h1>
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Form Section -->
+  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">ตั้งค่าตารางการฝึกอบรมอัตโนมัติ</h1>
 
-        <form action="#" method="POST" class="space-y-6">
-            {% csrf_token %}
+    <form method="POST" action="{% url 'retrain_model' %}" class="space-y-6">
+      {% csrf_token %}
 
-            <div>
-                <label for="frequency" class="block text-sm font-medium text-gray-700 mb-1">
-                    ความถี่ในการฝึกอบรม:
-                </label>
-                <select id="frequency" name="frequency"
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 
-                               focus:ring-blue-500 focus:border-blue-500">
-                    <option value="daily">รายวัน</option>
-                    <option value="weekly">รายสัปดาห์</option>
-                    <option value="monthly">รายเดือน</option>
-                </select>
-            </div>
+      <div>
+        {{ form.frequency.label_tag }}
+        {{ form.frequency }}
+        {% if form.frequency.errors %}
+          <p class="text-red-500 text-sm">{{ form.frequency.errors }}</p>
+        {% endif %}
+      </div>
 
-            <div>
-                <label for="time" class="block text-sm font-medium text-gray-700 mb-1">
-                    เวลาที่ต้องการฝึกอบรม:
-                </label>
-                <input type="time" id="time" name="time"
-                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 
-                              focus:ring-blue-500 focus:border-blue-500">
-            </div>
+      <div>
+        {{ form.scheduled_time.label_tag }}
+        {{ form.scheduled_time }}
+        {% if form.scheduled_time.errors %}
+          <p class="text-red-500 text-sm">{{ form.scheduled_time.errors }}</p>
+        {% endif %}
+      </div>
 
-            <div>
-                <button type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md 
-                               hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    บันทึกการตั้งค่า
-                </button>
-            </div>
-        </form>
+      <div>
+        {{ form.is_active.label_tag }}
+        {{ form.is_active }}
+      </div>
 
+      <div>
+        <button type="submit"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          บันทึกการตั้งค่า
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Training Log Section -->
+  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200" x-data="trainingLog()">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-gray-800">Training Log</h2>
+      <div class="flex gap-2">
+        <button 
+          @click="connect()" 
+          :disabled="isConnected"
+          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500">
+          <span x-show="!isConnected">เชื่อมต่อ</span>
+          <span x-show="isConnected">เชื่อมต่อแล้ว</span>
+        </button>
+        <button 
+          @click="disconnect()" 
+          :disabled="!isConnected"
+          class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500">
+          ปิดการเชื่อมต่อ
+        </button>
+        <button 
+          @click="clearLogs()" 
+          class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
+          ล้าง Log
+        </button>
+      </div>
     </div>
+
+    <!-- Status Indicator -->
+    <div class="mb-4 flex items-center gap-2">
+      <div class="w-3 h-3 rounded-full" 
+           :class="isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'"></div>
+      <span class="text-sm text-gray-600" x-text="isConnected ? 'กำลังเชื่อมต่อ...' : 'ไม่ได้เชื่อมต่อ'"></span>
+    </div>
+
+    <!-- Log Display Area -->
+    <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto" 
+         id="log-container"
+         x-ref="logContainer">
+      <div x-show="logs.length === 0" class="text-gray-500">
+        ยังไม่มี log... คลิกปุ่ม "เชื่อมต่อ" เพื่อเริ่มรับ log
+      </div>
+      <template x-for="(log, index) in logs" :key="index">
+        <div class="mb-1" x-text="log"></div>
+      </template>
+    </div>
+  </div>
 </div>
+
+<script>
+function trainingLog() {
+  return {
+    logs: [],
+    isConnected: false,
+    eventSource: null,
+    fastApiUrl: 'http://127.0.0.1:8001/train-progress',
+
+    connect() {
+      if (this.isConnected) return;
+
+      try {
+        // สร้าง EventSource เพื่อเชื่อมต่อกับ SSE endpoint
+        this.eventSource = new EventSource(this.fastApiUrl);
+
+        // เมื่อได้รับข้อมูล
+        this.eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            const timestamp = new Date().toLocaleTimeString('th-TH');
+            const logMessage = `[${timestamp}] ${data.status || JSON.stringify(data)}`;
+            this.logs.push(logMessage);
+            
+            // Auto scroll to bottom
+            this.$nextTick(() => {
+              const container = this.$refs.logContainer;
+              if (container) {
+                container.scrollTop = container.scrollHeight;
+              }
+            });
+          } catch (e) {
+            console.error('Error parsing SSE data:', e);
+            const timestamp = new Date().toLocaleTimeString('th-TH');
+            this.logs.push(`[${timestamp}] Error: ${event.data}`);
+          }
+        };
+
+        // เมื่อเกิด error
+        this.eventSource.onerror = (error) => {
+          console.error('SSE Error:', error);
+          const timestamp = new Date().toLocaleTimeString('th-TH');
+          this.logs.push(`[${timestamp}] ❌ การเชื่อมต่อเกิดข้อผิดพลาด`);
+          this.disconnect();
+        };
+
+        // เมื่อเชื่อมต่อสำเร็จ
+        this.eventSource.onopen = () => {
+          this.isConnected = true;
+          const timestamp = new Date().toLocaleTimeString('th-TH');
+          this.logs.push(`[${timestamp}] ✅ เชื่อมต่อสำเร็จ`);
+        };
+
+      } catch (error) {
+        console.error('Failed to connect:', error);
+        const timestamp = new Date().toLocaleTimeString('th-TH');
+        this.logs.push(`[${timestamp}] ❌ ไม่สามารถเชื่อมต่อได้: ${error.message}`);
+      }
+    },
+
+    disconnect() {
+      if (this.eventSource) {
+        this.eventSource.close();
+        this.eventSource = null;
+      }
+      this.isConnected = false;
+      const timestamp = new Date().toLocaleTimeString('th-TH');
+      this.logs.push(`[${timestamp}] 🔌 ปิดการเชื่อมต่อแล้ว`);
+    },
+
+    clearLogs() {
+      this.logs = [];
+    }
+  }
+}
+</script>
 {% endblock %}
