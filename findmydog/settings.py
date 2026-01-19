@@ -126,18 +126,6 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'project_db_name',     
-        'USER': 'postgres',      
-        'PASSWORD': '1234',            
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-    }
-}
-
 # DATABASES = {
 #     'default': dj_database_url.parse(
 #         # "postgresql://postgres:wJTBwSaKjmwVPbiWJAwxhiVWXDGXrIxB@interchange.proxy.rlwy.net:19586/railway"
@@ -145,16 +133,17 @@ DATABASES = {
 #     )
 # }
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "project_db_name",
-#         "USER": "postgres",
-#         "PASSWORD": "1234",
-#         "HOST": "localhost",
-#         "PORT": "5432",
-#     }
-# }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "project_db_name",
+        "USER": "postgres",
+        "PASSWORD": "1234",
+        "HOST": "localhost",
+        "PORT": "5432",
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
