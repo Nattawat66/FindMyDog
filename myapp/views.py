@@ -21,6 +21,8 @@ import numpy as np
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from datetime import datetime
 
 # ---------- UI Render Views ----------
 @login_required
@@ -758,16 +760,17 @@ def admin_page(request):
 
 from .serverFast import trainKNN
 
-def setTrainKnn(request):
+def page_testEMBmodel(request):
     return render(request, 'admin/Training/set_trainKNN.html')
 
-@csrf_exempt  # หรือใช้ CSRF token จาก frontend
-def trigger_train_knn(request):
-    if request.method != "POST":
-        return JsonResponse({"status": "error", "detail": "POST only"}, status=405)
+def page_select_model(request):
+    return render(request, 'admin/Training/select_model.html')
 
-    result = trainKNN()
-    return JsonResponse(result)
+def select_model(request):
+    pass
+
+def TestEmbModel(request):
+    pass
 
 def set_auto_training(request):
     from datetime import datetime, time
@@ -775,6 +778,7 @@ def set_auto_training(request):
     import pytz
     
     config = TrainingConfig.objects.first()
+    form = TrainingScheduleForm(instance=config)
     countdown_seconds = None
     next_training_time = None
     
@@ -815,12 +819,14 @@ def set_auto_training(request):
     
     context = {
         'config': config,
+        'form': form,
         'countdown_seconds': countdown_seconds,
         'next_training_time': next_training_time,
         'cache_triggered': cache_triggered,
     }
     
     return render(request, 'admin/Training/SetautoTraining.html', context)
+    
 def set_time_auto_training(request):
     config = TrainingConfig.objects.first()
 
@@ -834,41 +840,45 @@ def set_time_auto_training(request):
             cache.set("AUTO_TRAIN_ACTIVE", obj.is_active, None)
 
             update_scheduler()  # รีโหลด scheduler ใหม่ทันที
-
+            
+            messages.success(
+                request,
+                f"ตั้งเวลาสำเร็จ! ระบบจะเริ่มทำงานทุก {obj.get_frequency_display()} เวลา {obj.scheduled_time}"
+            )
             return redirect('set_auto_training')
         else:
             form = TrainingScheduleForm(instance=config)
 
         return render(request, 'admin/Training/SetautoTraining.html', {'form': form})
 
-@staff_member_required
-def train_knn_view(request):
-    images = DogImage.objects.exclude(embedding_binary__isnull=True)
+# @staff_member_required
+# def train_knn_view(request):
+#     images = DogImage.objects.exclude(embedding_binary__isnull=True)
 
-    train_data = []
+#     train_data = []
 
-    for img in images:
-        embedding_b64 = base64.b64encode(
-            img.embedding_binary
-        ).decode("utf-8")
+#     for img in images:
+#         embedding_b64 = base64.b64encode(
+#             img.embedding_binary
+#         ).decode("utf-8")
 
-        train_data.append({
-            "dog_id": img.dog_id,
-            "embedding_b64": embedding_b64   # ✅ ชื่อตรง
-        })
+#         train_data.append({
+#             "dog_id": img.dog_id,
+#             "embedding_b64": embedding_b64   # ✅ ชื่อตรง
+#         })
 
-    if not train_data:
-        return JsonResponse(
-            {"status": "error", "message": "ไม่มี embedding"},
-            status=400
-        )
+#     if not train_data:
+#         return JsonResponse(
+#             {"status": "error", "message": "ไม่มี embedding"},
+#             status=400
+#         )
 
-    response = requests.post(
-        "https://3f03a05d7b85.ngrok-free.app/train-knn/",
-        json={"data": train_data},
-        timeout=120
-    )
+#     response = requests.post(
+#         "https://3f03a05d7b85.ngrok-free.app/train-knn/",
+#         json={"data": train_data},
+#         timeout=120
+#     )
 
-    return JsonResponse(response.json(), status=response.status_code)
+#     return JsonResponse(response.json(), status=response.status_code)
 
 

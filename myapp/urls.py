@@ -48,8 +48,13 @@ urlpatterns = [
     path('SetautoTraining/', views.set_auto_training, name='set_auto_training'),
     path('model/retrain/', views.set_time_auto_training, name='retrain_model'),
     # path("debug/cache/", debug_cache),
-    path('set_trainKNN/', views.setTrainKnn, name='trainKnn'),
-    path('trainKNN/', views.trigger_train_knn, name='trainKNN')
+    path('page/testEMBmodel/', views.page_testEMBmodel, name='testEMBmodel'),
+    path('test-performanch-model/', views.TestEmbModel),
+
+    path('page/select-model/', views.page_select_model, name='page_select_model'),
+    path('select-model/', views.select_model, name='select_model'),
+    
+    # path('trainKNN/', views.trigger_train_knn, name='trainKNN')
     
     ]
 

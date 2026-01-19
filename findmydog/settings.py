@@ -129,7 +129,7 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 # DATABASES = {
 #     'default': dj_database_url.parse(
 #         # "postgresql://postgres:wJTBwSaKjmwVPbiWJAwxhiVWXDGXrIxB@interchange.proxy.rlwy.net:19586/railway"
-#         "postgresql://postgres:boss123454@db.pckuwfauavyojghhmdzz.supabase.co:5432/postgres"
+#         "postgresql://postgres:boss123454@db.pckuwfauavyojghhmdzz.su  pabase.co:5432/postgres"
 #     )
 # }
 
