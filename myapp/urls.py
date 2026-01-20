@@ -50,9 +50,11 @@ urlpatterns = [
     # path("debug/cache/", debug_cache),
     path('page/testEMBmodel/', views.page_testEMBmodel, name='testEMBmodel'),
     path('test-performanch-model/', views.TestEmbModel),
+    path('train-knn/', views.train_knn_view, name='train_knn'),
 
     path('page/select-model/', views.page_select_model, name='page_select_model'),
     path('select-model/', views.select_model, name='select_model'),
+    
     
     # path('trainKNN/', views.trigger_train_knn, name='trainKNN')
     

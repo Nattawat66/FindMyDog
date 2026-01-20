@@ -761,7 +761,7 @@ def admin_page(request):
 from .serverFast import trainKNN
 
 def page_testEMBmodel(request):
-    return render(request, 'admin/Training/set_trainKNN.html')
+    return render(request, 'admin/Training/set_TestKNN.html')
 
 def page_select_model(request):
     return render(request, 'admin/Training/select_model.html')
@@ -851,34 +851,58 @@ def set_time_auto_training(request):
 
         return render(request, 'admin/Training/SetautoTraining.html', {'form': form})
 
-# @staff_member_required
-# def train_knn_view(request):
-#     images = DogImage.objects.exclude(embedding_binary__isnull=True)
+@staff_member_required
+def train_knn_view(request):
+    # 1. ดึงข้อมูลที่มี Embedding
+    images = DogImage.objects.exclude(embedding_binary__isnull=True)
+    train_data = []
 
-#     train_data = []
+    for img in images:
+        embedding_b64 = base64.b64encode(
+            img.embedding_binary
+        ).decode("utf-8")
 
-#     for img in images:
-#         embedding_b64 = base64.b64encode(
-#             img.embedding_binary
-#         ).decode("utf-8")
+        train_data.append({
+            "dog_id": img.dog_id,
+            "embedding_b64": embedding_b64
+        })
 
-#         train_data.append({
-#             "dog_id": img.dog_id,
-#             "embedding_b64": embedding_b64   # ✅ ชื่อตรง
-#         })
+    if not train_data:
+        return JsonResponse(
+            {"status": "error", "message": "ไม่มี embedding ในระบบ"},
+            status=400
+        )
 
-#     if not train_data:
-#         return JsonResponse(
-#             {"status": "error", "message": "ไม่มี embedding"},
-#             status=400
-#         )
+    try:
+        # 2. ส่งข้อมูลไปยัง FastAPI
+        # เพิ่ม timeout เผื่อกรณี t-SNE ใช้เวลาคำนวณนาน
+        response = requests.post(
+            "http://127.0.0.1:8001/test-knn/",
+            json={"data": train_data},
+            timeout=180 
+        )
+        
+        result_data = response.json()
 
-#     response = requests.post(
-#         "https://3f03a05d7b85.ngrok-free.app/train-knn/",
-#         json={"data": train_data},
-#         timeout=120
-#     )
+        if response.status_code == 200:
+            # 3. ส่งรูปภาพทั้ง 2 ไปยัง Template
+            # หมายเหตุ: 'knn_matrix' ต้องตรงกับที่ตั้งใน FastAPI
+            return render(request, 'admin/Training/set_TestKNN.html', {
+                'tsne_plot': result_data.get('tsne_plot'),
+                'knn_matrix': result_data.get('knn_matrix'), # เปลี่ยนชื่อ key ให้ตรงกัน
+                'status': result_data.get('status'),
+                'message': result_data.get('message'),
+                'count': len(train_data),
+            })
+        else:
+            return JsonResponse({
+                "status": "error", 
+                "message": f"FastAPI Error: {result_data.get('detail', 'Unknown error')}"
+            }, status=response.status_code)
 
-#     return JsonResponse(response.json(), status=response.status_code)
-
+    except requests.RequestException as e:
+        return JsonResponse(
+            {"status": "error", "message": f"ไม่สามารถเชื่อมต่อ FastAPI ได้: {str(e)}"},
+            status=500
+        )
 

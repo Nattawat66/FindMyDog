@@ -1,0 +1,118 @@
+{% extends 'admin/baseAI.html' %}
+
+{% block title %}KNN Training - FindMyDog{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6" x-data="modelSelector()" x-init="init()">
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-800 p-6 rounded-2xl shadow-lg text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">test KNN classification</h1>
+          <p class="text-purple-100">การทดสอบ embeding ด้วย algorithm KNN</p>
+        </div>
+        <div class="p-4 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
+          <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Current Active Model Card -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border-2 border-indigo-200"
+         x-show="currentModel"
+         x-transition>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="p-3 bg-indigo-100 rounded-lg">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Model ที่ใช้งานอยู่</p>
+            <p class="text-xl font-bold text-gray-800" x-text="currentModel.active_model || 'N/A'"></p>
+            <p class="text-xs text-gray-500 mt-1" x-text="'Device: ' + (currentModel.device || 'N/A')"></p>
+            <p class="text-xs text-gray-500 mt-1 font-mono" x-text="getModelPath(currentModel.active_model)"></p>
+          </div>
+        </div>
+        <div class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold text-sm">
+          กำลังใช้งาน
+        </div>
+      </div>
+    </div>
+
+    <!-- Run KNN Test Button + Explanation -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Left: control -->
+      <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-dashed border-indigo-300">
+        <form method="post" action="{% url 'train_knn' %}" class="space-y-4">
+          {% csrf_token %}
+          <p class="text-sm text-gray-600">
+            ระบบจะนำ <span class="font-semibold text-indigo-700">embedding_binary</span> ทั้งหมดจากรูปสุนัขที่มีอยู่
+            ไปทดสอบบน FastAPI แล้วแสดงผล Visualization ด้านล่าง
+          </p>
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-500">
+              {% if count %}
+                <span>จำนวน embedding ที่ใช้ทดสอบ: <span class="font-semibold text-indigo-700">{{ count }}</span></span>
+              {% else %}
+                <span>ยังไม่ได้รันการทดสอบ</span>
+              {% endif %}
+            </div>
+            <button type="submit"
+                    class="inline-flex items-center px-5 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M5 13l4 4L19 7" />
+              </svg>
+              ทดสอบ Embedding KNN
+            </button>
+          </div>
+          {% if status %}
+            <div class="mt-2 text-sm {% if status == 'success' %}text-green-600{% else %}text-red-600{% endif %}">
+              {{ message }}
+            </div>
+          {% endif %}
+        </form>
+      </div>
+
+      <!-- Right: how-to / explanation -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-indigo-100">
+        <h2 class="text-sm font-semibold text-gray-800 mb-2">วิธีการทดสอบ & เทคนิค</h2>
+        <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+          <li>ระบบใช้ <span class="font-semibold text-indigo-700">KNN</span> โดยตั้งค่า <span class="font-mono">n_neighbors = 3</span> (ดูเพื่อนบ้านที่ใกล้ที่สุด 3 จุด)</li>
+          <li>ข้อมูลที่ใช้คือเวกเตอร์ <span class="font-mono">embedding_binary</span> ของรูปสุนัขแต่ละตัวในฐานข้อมูล</li>
+          <li>กราฟ <span class="font-semibold">t-SNE</span> ใช้สำหรับลดมิติและดูการกระจายตัวของกลุ่มสุนัขใน 2 มิติ</li>
+          <li><span class="font-semibold">Confusion Matrix</span> แสดงการทำนายถูก/ผิดของ KNN โดยแกน Y คือ Dog ID จริง และแกน X คือ Dog ID ที่โมเดลทำนาย</li>
+          <li>ค่าบนเส้นทแยงมุม (Diagonal) ยิ่งสูง แปลว่าโมเดลจำแนกสุนัขตัวนั้นได้ดี</li>
+          <li>ถ้าอยากทดสอบใหม่ ให้เพิ่ม/อัปเดตรูปสุนัขให้มี embedding แล้วกดปุ่มทดสอบอีกครั้ง</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Visualization Results -->
+    {% if tsne_plot or knn_matrix %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% if tsne_plot %}
+      <div class="bg-white p-4 rounded-xl shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">t-SNE Visualization</h2>
+        <div class="border rounded-lg overflow-hidden bg-gray-50">
+          <img src="data:image/png;base64,{{ tsne_plot }}" alt="t-SNE Plot" class="w-full h-auto">
+        </div>
+      </div>
+      {% endif %}
+
+      {% if knn_matrix %}
+      <div class="bg-white p-4 rounded-xl shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">KNN Confusion Matrix</h2>
+        <div class="border rounded-lg overflow-hidden bg-gray-50">
+          <img src="data:image/png;base64,{{ knn_matrix }}" alt="KNN Confusion Matrix" class="w-full h-auto">
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
