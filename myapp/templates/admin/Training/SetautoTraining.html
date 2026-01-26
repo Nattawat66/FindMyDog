@@ -13,36 +13,37 @@
     </div>
   </div>
   <!-- test performanch model -->
+
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6" x-data="countdownTimer({{ countdown_seconds|default:0 }})">
-    <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex items-center space-x-4">
-      <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-        </svg>
+      <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex items-center space-x-4">
+          <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+          </div>
+          <div>
+              <p class="text-xs text-gray-500 font-medium">การฝึกอบรมครั้งถัดไป</p>
+              <p class="text-lg font-bold text-gray-800">
+                  {% if next_training_time %}
+                      {{ next_training_time|date:"d/m/Y H:i" }} น.
+                  {% else %}
+                      ไม่ได้ตั้งค่า
+                  {% endif %}
+              </p>
+          </div>
       </div>
-      <div>
-        <p class="text-xs text-gray-500 font-medium">การฝึกอบรมครั้งถัดไป</p>
-        <p class="text-lg font-bold text-gray-800">
-          {% if next_training_time %}
-            {{ next_training_time|date:"d/m/Y H:i" }} น.
-          {% else %}
-            ไม่ได้ตั้งค่า
-          {% endif %}
-        </p>
+
+      <div class="bg-white p-4 rounded-xl border border-orange-100 shadow-sm flex items-center space-x-4">
+          <div class="p-3 bg-orange-50 rounded-lg text-orange-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+          </div>
+          <div>
+              <p class="text-xs text-gray-500 font-medium">จะเริ่มในอีก</p>
+              <p class="text-lg font-bold text-orange-600 font-mono" x-text="timeLeft">--:--:--</p>
+          </div>
       </div>
-    </div>
-  
-    <div class="bg-white p-4 rounded-xl border border-orange-100 shadow-sm flex items-center space-x-4">
-      <div class="p-3 bg-orange-50 rounded-lg text-orange-600">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-      </div>
-      <div>
-        <p class="text-xs text-gray-500 font-medium">จะเริ่มในอีก</p>
-        <p class="text-lg font-bold text-orange-600 font-mono" x-text="timeLeft">--:--:--</p>
-      </div>
-    </div>
   </div>
   <!-- Auto Training Schedule Form -->
   <div class="max-w-4xl mx-auto space-y-6">

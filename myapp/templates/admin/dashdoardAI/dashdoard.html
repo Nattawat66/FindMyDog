@@ -3,127 +3,435 @@
 {% block content %}
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto p-6">
-                <div class="max-w-7xl mx-auto">
+                <div class="max-w-7xl mx-auto space-y-6">
                     <!-- Welcome Section -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800 mb-2">ยินดีต้อนรับสู่ AI Management Panel</h1>
-                        <p class="text-gray-600">จัดการและควบคุมระบบ AI Model ของคุณได้จากที่นี่</p>
+                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+                        <h1 class="text-3xl font-bold mb-2">ยินดีต้อนรับสู่ AI Management Panel</h1>
+                        <p class="text-indigo-100">จัดการและควบคุมระบบ AI Model ของคุณได้จากที่นี่</p>
                     </div>
 
-                    <!-- Quick Stats -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-600 mb-1">Active Models</p>
-                                    <p class="text-2xl font-bold text-gray-800">-</p>
-                                </div>
-                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
-                                    </svg>
-                                </div>
-                            </div>
+                    <!-- Latest Test Results Section -->
+                    <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                            <h2 class="text-xl font-bold text-white flex items-center">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span id="resultTitle">ผลการทดสอบล่าสุด</span>
+                            </h2>
+                            <p class="text-blue-100 text-sm mt-1">แสดงผลการทดสอบ KNN ล่าสุดพร้อมกราฟวิเคราะห์</p>
                         </div>
+                        
+                        <div class="p-6">
+                            {% load static %}
+                            <div id="resultContent">
+                                {% if latest_result %}
+                                    <!-- Latest Result Stats -->
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                            <p class="text-xs font-medium text-blue-600 uppercase">Embedding ทั้งหมด</p>
+                                            <p class="text-2xl font-bold text-blue-900 mt-2">{{ latest_result.count }}</p>
+                                        </div>
+                                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                                            <p class="text-xs font-medium text-green-600 uppercase">ความแม่นยำ</p>
+                                            <p class="text-2xl font-bold text-green-900 mt-2">{{ latest_result.accuracy|floatformat:2 }}%</p>
+                                        </div>
+                                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                                            <p class="text-xs font-medium text-purple-600 uppercase">วันที่ทดสอบ</p>
+                                            <p class="text-sm font-bold text-purple-900 mt-2">{{ latest_result.created_at|date:"d/m/Y" }}</p>
+                                        </div>
+                                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                                            <p class="text-xs font-medium text-orange-600 uppercase">เวลา</p>
+                                            <p class="text-sm font-bold text-orange-900 mt-2">{{ latest_result.created_at|time:"H:i" }} น.</p>
+                                        </div>
+                                    </div>
 
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-600 mb-1">Training Jobs</p>
-                                    <p class="text-2xl font-bold text-gray-800">-</p>
-                                </div>
-                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
+                                    <!-- Graphs Section -->
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <!-- t-SNE Plot -->
+                                        {% if latest_result.tsne_image %}
+                                        <div class="bg-gray-50 rounded-lg border border-gray-300 p-4">
+                                            <h3 class="font-semibold text-gray-800 mb-3">📊 t-SNE Visualization</h3>
+                                            <div class="border-2 border-dashed border-blue-300 rounded-lg overflow-hidden bg-white cursor-pointer group" onclick="openImageModal('{{ latest_result.tsne_image.url }}', 't-SNE Visualization')">
+                                                <img src="{{ latest_result.tsne_image.url }}" alt="t-SNE Plot" class="w-full h-auto max-h-80 object-contain group-hover:opacity-80 transition-opacity">
+                                            </div>
+                                            <button onclick="openImageModal('{{ latest_result.tsne_image.url }}', 't-SNE Visualization')" class="mt-3 inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors text-sm font-medium">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+                                                </svg>
+                                                ขยายภาพ
+                                            </button>
+                                        </div>
+                                        
+                                        {% endif %}
 
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-600 mb-1">Model Accuracy</p>
-                                    <p class="text-2xl font-bold text-gray-800">-</p>
-                                </div>
-                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
+                                        <!-- KNN Matrix -->
+                                        {% if latest_result.knn_matrix_image %}
+                                        <div class="bg-gray-50 rounded-lg border border-gray-300 p-4">
+                                            <h3 class="font-semibold text-gray-800 mb-3">📈 KNN Confusion Matrix</h3>
+                                            <div class="border-2 border-dashed border-green-300 rounded-lg overflow-hidden bg-white cursor-pointer group" onclick="openImageModal('{{ latest_result.knn_matrix_image.url }}', 'KNN Confusion Matrix')">
+                                                <img src="{{ latest_result.knn_matrix_image.url }}" alt="KNN Matrix" class="w-full h-auto max-h-80 object-contain group-hover:opacity-80 transition-opacity">
+                                            </div>
+                                            <button onclick="openImageModal('{{ latest_result.knn_matrix_image.url }}', 'KNN Confusion Matrix')" class="mt-3 inline-flex items-center px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors text-sm font-medium">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+                                                </svg>
+                                                ขยายภาพ
+                                            </button>
+                                        </div>
+                                        
+                                        {% endif %}
+                                        
+                                    </div>
 
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-600 mb-1">Dataset Size</p>
-                                    <p class="text-2xl font-bold text-gray-800">-</p>
-                                </div>
-                                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                                    </svg>
-                                </div>
+                                {% else %}
+                                    <div class="text-center py-12">
+                                        <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <h3 class="text-lg font-semibold text-gray-600 mb-2">ยังไม่มีผลการทดสอบ</h3>
+                                        <p class="text-gray-500 mb-6">กรุณาไปทดสอบ KNN เพื่อดูผลการทดสอบล่าสุด</p>
+                                        <a href="{% url 'page_testEMBmodel' %}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            ทดสอบ KNN
+                                        </a>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Feature Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Training Scheduler Card -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                            <div class="flex items-center space-x-3 mb-4">
-                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Historical Test Data Section & Available Models Section -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left: Historical Test Data Table -->
+                        <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden flex flex-col">
+                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4 flex-none">
+                                <h2 class="text-xl font-bold text-white flex items-center">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-800">Training Scheduler</h3>
+                                    ประวัติการทดสอบ
+                                </h2>
+                                <p class="text-purple-100 text-sm mt-1">ดูประวัติการทดสอบทั้งหมด (สามารถเลื่อนได้)</p>
                             </div>
-                            <p class="text-gray-600 text-sm mb-4">จัดการตารางการฝึกอบรมโมเดลอัตโนมัติ</p>
-                            <ul class="text-sm text-gray-500 space-y-1">
-                                <li>• Set auto training schedule</li>
-                                <li>• Logging & Training alerts</li>
-                            </ul>
+
+                            <div class="overflow-x-auto overflow-y-auto flex-1" style="max-height: 500px;">
+                                <table class="w-full table-auto">
+                                    <thead class="bg-gray-100 border-b border-gray-200 sticky top-0 z-10">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">#</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">วันที่</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Embedding</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">ความแม่นยำ</th>
+                                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">ดำเนินการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        {% if test_history %}
+                                            {% for result in test_history %}
+                                            <tr class="hover:bg-gray-50 transition-colors">
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{{ forloop.counter }}</td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                                                    <div class="font-medium">{{ result.created_at|date:"d/m/Y" }}</div>
+                                                    <div class="text-gray-500">{{ result.created_at|time:"H:i" }}</div>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-xs">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        {{ result.count }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <div class="flex items-center gap-1">
+                                                        <div class="w-12 bg-gray-200 rounded-full h-1 mr-1">
+                                                            <div class="bg-green-500 h-1 rounded-full" style="width: {{ result.accuracy|default:0 }}%"></div>
+                                                        </div>
+                                                        <span class="text-xs font-bold text-gray-900 w-10">{{ result.accuracy|floatformat:2 }}%</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-center">
+                                                    <button onclick="showResultDetail({{ result.id }}, event)" 
+                                                            class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded transition-colors font-semibold text-xs border border-indigo-200">
+                                                        ดู
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="5" class="px-4 py-12 text-center text-gray-500">
+                                                    <div class="flex flex-col items-center">
+                                                        <svg class="w-12 h-12 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        <p class="text-base font-medium">ยังไม่มีประวัติ</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
-                        <!-- Model Selector Card -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                            <div class="flex items-center space-x-3 mb-4">
-                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Right: Available Models Section -->
+                         
+                        <div x-data="modelSelector()" 
+                             x-init="init()"
+                             class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden flex flex-col">
+                            <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 flex-none">
+                                <h2 class="text-xl font-bold text-white flex items-center">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                     </svg>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-800">Model Selector</h3>
+                                    โมเดลที่ใช้ได้
+                                </h2>
+                                <p class="text-green-100 text-sm mt-1">รายชื่อโมเดล AI ที่มีอยู่ในระบบ</p>
                             </div>
-                            <p class="text-gray-600 text-sm mb-4">เลือกและเปรียบเทียบโมเดล</p>
-                            <ul class="text-sm text-gray-500 space-y-1">
-                                <li>• Choose model architecture</li>
-                                <li>• Compare models</li>
-                                <li>• Select default model</li>
-                            </ul>
-                        </div>
+                            
+                            <div class="overflow-y-auto flex-1 p-4 space-y-3" style="max-height: 500px;">
+                                <!-- Summary Stats -->
+                                <template x-if="!loading && models.length > 0">
+                                    <div class="bg-gray-100 p-4 rounded-lg border border-gray-300 mt-4">
+                                        <h4 class="font-semibold text-gray-800 text-sm mb-3">สรุปข้อมูล</h4>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <p class="text-xs text-gray-600">โมเดลทั้งหมด</p>
+                                                <p class="text-lg font-bold text-gray-900" x-text="models.length"></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-600">โมเดลที่ใช้</p>
+                                                <p class="text-lg font-bold text-green-600">1</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <!-- Loading State -->
+                                <template x-if="loading">
+                                    <div class="flex justify-center items-center py-8">
+                                        <div class="animate-spin">
+                                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="ml-2 text-gray-600">กำลังโหลด...</span>
+                                    </div>
+                                </template>
 
-                        <!-- Performance Test Card -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                            <div class="flex items-center space-x-3 mb-4">
-                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-800">Performance Test</h3>
+                                <!-- Error State -->
+                                <template x-if="error && !loading">
+                                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                        <p class="text-sm text-red-800"><strong>เกิดข้อผิดพลาด:</strong> <span x-text="error"></span></p>
+                                    </div>
+                                </template>
+
+                                <!-- Models List -->
+                                <template x-if="!loading && models.length > 0">
+                                    <div class="space-y-3">
+                                        <template x-for="model in models" :key="model.id">
+                                            <div class="border rounded-lg p-4 transition-all duration-200"
+                                                 :class="model.active ? 'border-green-300 bg-green-50 shadow-md' : 'border-blue-200 bg-gradient-to-br from-blue-50 to-white hover:shadow-md'">
+                                                <div class="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <h4 class="font-semibold text-gray-800" x-text="model.id === 'default' ? 'Default Model' : model.id"></h4>
+                                                        <p class="text-xs text-gray-500 mt-1">
+                                                            <span x-show="model.type === 'legacy'" class="text-gray-600">Legacy Model</span>
+                                                            <span x-show="model.type === 'versioned'" class="text-blue-600">Versioned Model</span>
+                                                        </p>
+                                                    </div>
+                                                    <template x-if="model.active">
+                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                            </svg>
+                                                            ใช้งานอยู่
+                                                        </span>
+                                                    </template>
+                                                </div>
+
+                                                <!-- Model Details -->
+                                                <template x-if="model.details">
+                                                    <div class="text-xs text-gray-600 space-y-1 mb-3 bg-white bg-opacity-50 p-2 rounded">
+                                                        <template x-if="model.type === 'versioned' && model.details.trained_at">
+                                                            <p><strong>ฝึกเมื่อ:</strong> <span x-text="formatDate(model.details.trained_at)"></span></p>
+                                                        </template>
+                                                        <template x-if="model.type === 'legacy' && model.details.created_at">
+                                                            <p><strong>สร้างเมื่อ:</strong> <span x-text="model.details.created_at"></span></p>
+                                                        </template>
+                                                        <template x-if="model.details.accuracy">
+                                                            <p><strong>Accuracy:</strong> <span x-text="model.details.accuracy"></span></p>
+                                                        </template>
+                                                        <template x-if="model.path">
+                                                            <p><strong>Path:</strong> <span x-text="getModelPath(model.id)" class="font-mono"></span></p>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Empty State -->
+                                <template x-if="!loading && models.length === 0 && !error">
+                                    <div class="text-center py-8 text-gray-500">
+                                        <svg class="w-12 h-12 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                        </svg>
+                                        <p>ยังไม่มีโมเดลในระบบ</p>
+                                    </div>
+                                </template>
+
+
                             </div>
-                            <p class="text-gray-600 text-sm mb-4">ทดสอบประสิทธิภาพโมเดล</p>
-                            <ul class="text-sm text-gray-500 space-y-1">
-                                <li>• Test accuracy / F1 / Precision</li>
-                                <li>• Compare new vs old</li>
-                                <li>• Auto-revert</li>
-                            </ul>
                         </div>
-                    </div>
+                    </div>    
                 </div>
             </main>
+
+            <!-- Image Modal -->
+            <div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-lg shadow-2xl max-w-4xl max-h-screen overflow-auto relative">
+                    <!-- Modal Header -->
+                    <div class="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-white" id="modalTitle">ขยายภาพ</h3>
+                        <button onclick="closeImageModal()" class="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <div class="p-6 flex items-center justify-center">
+                        <img id="modalImage" src="" alt="Expanded Image" class="max-w-full max-h-screen object-contain rounded-lg">
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="bg-gray-100 px-6 py-4 flex justify-end gap-3">
+                        <button onclick="closeImageModal()" class="inline-flex items-center px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors">
+                            ปิด
+                        </button>
+                        <a id="downloadLink" download class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            ดาวน์โหลด
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function openImageModal(imageUrl, title) {
+                    document.getElementById('imageModal').classList.remove('hidden');
+                    document.getElementById('modalImage').src = imageUrl;
+                    document.getElementById('modalTitle').textContent = title;
+                    document.getElementById('downloadLink').href = imageUrl;
+                    document.body.style.overflow = 'hidden';
+                }
+                
+                function closeImageModal() {
+                    document.getElementById('imageModal').classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+                
+                // Close modal when clicking outside the content
+                document.getElementById('imageModal').addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeImageModal();
+                    }
+                });
+                
+                // Close modal on escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closeImageModal();
+                    }
+                });
+
+                function showResultDetail(resultId, event) {
+                    event.preventDefault();
+                    
+                    // ส่ง AJAX request เพื่อดึงข้อมูล result
+                    fetch(`/api/knn-result/${resultId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // อัปเดตหัวข้อด้วยวันที่
+                            const resultDate = new Date(data.created_at).toLocaleDateString('th-TH');
+                            document.getElementById('resultTitle').textContent = `ผลการทดสอบ ${resultDate}`;
+                            
+                            // สร้าง HTML สำหรับแสดงผล
+                            let html = `
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                        <p class="text-xs font-medium text-blue-600 uppercase">Embedding ทั้งหมด</p>
+                                        <p class="text-2xl font-bold text-blue-900 mt-2">${data.count}</p>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                                        <p class="text-xs font-medium text-green-600 uppercase">ความแม่นยำ</p>
+                                        <p class="text-2xl font-bold text-green-900 mt-2">${data.accuracy.toFixed(2)}%</p>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                                        <p class="text-xs font-medium text-purple-600 uppercase">วันที่ทดสอบ</p>
+                                        <p class="text-sm font-bold text-purple-900 mt-2">${new Date(data.created_at).toLocaleDateString('th-TH')}</p>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                                        <p class="text-xs font-medium text-orange-600 uppercase">เวลา</p>
+                                        <p class="text-sm font-bold text-orange-900 mt-2">${new Date(data.created_at).toLocaleTimeString('th-TH')}</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            `;
+                            
+                            // เพิ่ม t-SNE image
+                            if (data.tsne_image) {
+                                html += `
+                                    <div class="bg-gray-50 rounded-lg border border-gray-300 p-4">
+                                        <h3 class="font-semibold text-gray-800 mb-3">📊 t-SNE Visualization</h3>
+                                        <div class="border-2 border-dashed border-blue-300 rounded-lg overflow-hidden bg-white cursor-pointer group" onclick="openImageModal('${data.tsne_image}', 't-SNE Visualization')">
+                                            <img src="${data.tsne_image}" alt="t-SNE Plot" class="w-full h-auto max-h-80 object-contain group-hover:opacity-80 transition-opacity">
+                                        </div>
+                                        <button onclick="openImageModal('${data.tsne_image}', 't-SNE Visualization')" class="mt-3 inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors text-sm font-medium">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+                                            </svg>
+                                            ขยายภาพ
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                            
+                            // เพิ่ม KNN Matrix image
+                            if (data.knn_matrix_image) {
+                                html += `
+                                    <div class="bg-gray-50 rounded-lg border border-gray-300 p-4">
+                                        <h3 class="font-semibold text-gray-800 mb-3">📈 KNN Confusion Matrix</h3>
+                                        <div class="border-2 border-dashed border-green-300 rounded-lg overflow-hidden bg-white cursor-pointer group" onclick="openImageModal('${data.knn_matrix_image}', 'KNN Confusion Matrix')">
+                                            <img src="${data.knn_matrix_image}" alt="KNN Matrix" class="w-full h-auto max-h-80 object-contain group-hover:opacity-80 transition-opacity">
+                                        </div>
+                                        <button onclick="openImageModal('${data.knn_matrix_image}', 'KNN Confusion Matrix')" class="mt-3 inline-flex items-center px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors text-sm font-medium">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+                                            </svg>
+                                            ขยายภาพ
+                                        </button>
+                                    </div>
+                                `;
+                            }
+
+                            
+                            // อัปเดต DOM
+                            document.getElementById('resultContent').innerHTML = html;
+                            
+                            // เลื่อนกลับไปที่ top
+                            document.querySelector('.max-w-7xl').scrollIntoView({ behavior: 'smooth' });
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('ไม่สามารถโหลดข้อมูลได้');
+                        });
+                }
+            </script>
 {% endblock %}

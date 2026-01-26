@@ -27,7 +27,7 @@ def update_scheduler():
         replace_existing=True
     )
 
-    print(f"Scheduler set at {hour}:{minute} every day")
+    print(f"Scheduler set at {hour}:{minute} every {freq}")
 
 def start_scheduler():
     if not scheduler.running:

@@ -270,3 +270,4 @@ function trainingLog() {
         }
     }
 }
+/* -----------------set_TestKNN.html----------------- */
