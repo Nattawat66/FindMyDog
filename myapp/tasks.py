@@ -21,16 +21,18 @@ def retrain_model():
         "Authorization": f"Bearer {token}"
     }
 
-    fastapi_url = "http://localhost:8000/retrain-model-face"
- 
+    fastapi_url = "http://localhost:8001/retrain-model-face"
+
     try:
         response = requests.post(fastapi_url, headers=headers, timeout=5)
         print("FastAPI Status:", response.status_code)
 
         if response.status_code == 200:
-            print(" Django Task: FastAPI accepted token.")
+            data = response.json()
+            print(f"[Django] SUCCESS: Message from FastAPI: {data.get('message')}")
         else:
             print(" Django Task: FastAPI rejected token", response.text)
 
     except Exception as e:
         print("Django Task: Connection failed", e)
+

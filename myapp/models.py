@@ -298,3 +298,10 @@ class AdoptionRequest(models.Model):
         
     def __str__(self):
         return f"คำขอจาก {self.user.username} เพื่อรับเลี้ยง {self.dog.name} ({self.get_status_display()})"
+        
+class KNNTrainingResult(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    tsne_image = models.ImageField(upload_to="knn/tsne/")
+    knn_matrix_image = models.ImageField(upload_to="knn/matrix/")
+    count = models.IntegerField()
+    accuracy = models.FloatField()  

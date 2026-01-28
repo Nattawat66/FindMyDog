@@ -45,6 +45,10 @@ ALLOWED_HOSTS = [
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
 
 # Application definition
+
+TRAIN_KNN_HOUR = 2      # เทรนตอนตี 2
+TRAIN_KNN_MINUTE = 0 
+
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
 INSTALLED_APPS = [
@@ -61,6 +65,14 @@ INSTALLED_APPS = [
     # 'django_browser_reload',
     "django_crontab",
     'django_apscheduler',
+]
+
+CRONJOBS = [
+    (
+        '0 2 * * *',  # ตี 2 ทุกวัน (แนะนำกว่ารันทุกนาที)
+        'myapp.serverFast.trainKNN',
+        '>> /home/jaruvitgitant/Documents/Project_findmydog/Webapp/FindMyDog/cron_debug.log 2>&1'
+    ),
 ]
 
 AUTO_TRAIN_SECRET = os.getenv("AUTO_TRAIN_SECRET")
@@ -114,32 +126,10 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
-\
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "mydb",
-        "USER": "admin",
-        "PASSWORD": "1234",
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
-}
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'my_django_db',     
-#         'USER': 'macbookair',      
-#         'PASSWORD': '',            
-#         'HOST': '127.0.0.1',
-#         'PORT': '5432',
-#     }
-# }
-
 # DATABASES = {
 #     'default': dj_database_url.parse(
 #         # "postgresql://postgres:wJTBwSaKjmwVPbiWJAwxhiVWXDGXrIxB@interchange.proxy.rlwy.net:19586/railway"
-#         "postgresql://postgres:boss123454@db.pckuwfauavyojghhmdzz.supabase.co:5432/postgres"
+#         "postgresql://postgres:boss123454@db.pckuwfauavyojghhmdzz.su  pabase.co:5432/postgres"
 #     )
 # }
 
@@ -153,6 +143,7 @@ DATABASES = {
         "PORT": "5432",
     }
 }
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 

@@ -1,4 +1,5 @@
 
+from logging import config
 from .forms import DogForm, DogImageFormSet,OrgAdminDogForm,VACCINE_CHOICES,NotificationForm,ReportLostForm,TrainingScheduleForm
 from django.shortcuts import render, redirect ,get_object_or_404
 from django.http import Http404
@@ -20,6 +21,10 @@ import requests
 import numpy as np
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from datetime import datetime, time
+
 # ---------- UI Render Views ----------
 @login_required
 def dog_list(request):
@@ -383,67 +388,6 @@ def login(request):
 
     return render(request, 'myapp/authen/loginuser.html')
 
-# @login_required
-# def admin_page(request):
-#     if not request.user.is_staff:
-#         messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้')
-#         return redirect('home')
-#     return render(request, 'admin/index.html')
-def admin_page(request):
-    return render(request, 'admin/dashdoardAI/dashdoard.html')
-
-def set_auto_training(request):
-    from datetime import datetime, time
-    from django.utils import timezone
-    import pytz
-    
-    config = TrainingConfig.objects.first()
-    countdown_seconds = None
-    next_training_time = None
-    
-    if config and config.scheduled_time:
-        try:
-            # แยกชั่วโมงและนาทีจาก scheduled_time
-            hour, minute = map(int, config.scheduled_time.split(':'))
-            
-            # สร้างเวลาปัจจุบันและเป้าหมาย
-            now = timezone.now()
-            today = now.date()
-            
-            # สร้างเวลาเป้าหมายสำหรับวันนี้
-            target_time_today = timezone.make_aware(
-                datetime.combine(today, time(hour, minute))
-            )
-            
-            # ถ้าเวลาปัจจุบันเลยเวลาเป้าหมายแล้ว ให้คำนวณเป็นวันถัดไป
-            if now >= target_time_today:
-                if config.frequency == 'daily':
-                    target_time_today = target_time_today + timezone.timedelta(days=1)
-                elif config.frequency == 'weekly':
-                    target_time_today = target_time_today + timezone.timedelta(weeks=1)
-                elif config.frequency == 'monthly':
-                    # คำนวณเดือนถัดไป (แบบง่าย)
-                    next_month = today.month + 1 if today.month < 12 else 1
-                    next_year = today.year if today.month < 12 else today.year + 1
-                    target_time_today = target_time_today.replace(year=next_year, month=next_month)
-            
-            next_training_time = target_time_today
-            countdown_seconds = int((target_time_today - now).total_seconds())
-            
-        except (ValueError, AttributeError):
-            pass
-    
-    # ตรวจสอบสถานะ cache
-    cache_triggered = cache.get('training_triggered', False)
-    
-    context = {
-        'config': config,
-        'countdown_seconds': countdown_seconds,
-        'next_training_time': next_training_time,
-        'cache_triggered': cache_triggered,
-    }
-    
-    return render(request, 'admin/Training/SetautoTraining.html', context)
 
 def my_login_view(request)  :
     if request.method == 'POST':
@@ -556,7 +500,6 @@ def notification_list_view(request):
     
     return render(request, 'myapp/notifications/notification_list.html', context)
 
-
 @login_required
 def notification_detail_hx_view(request, notification_id):
     # 💡 ใช้ get_object_or_404 เพื่อจัดการถ้าไม่พบ
@@ -582,7 +525,6 @@ def notification_detail_hx_view(request, notification_id):
     }
     # 💡 สำคัญ: เรนเดอร์ template เฉพาะส่วน Pop-up
     return render(request, 'myapp/notifications/notification_modal.html', context)
-
 
 @login_required
 def create_notification_view(request):
@@ -622,7 +564,6 @@ def create_notification_view(request):
         'submit_text': "เผยแพร่ประกาศ",
     }
     return render(request, 'myapp/notifications/notification_form.html', context)
-
 
 @login_required
 def edit_notification_view(request, notification_id):
@@ -664,7 +605,6 @@ def edit_notification_view(request, notification_id):
     }
     return render(request, 'myapp/notifications/notification_form.html', context)
 
-
 @login_required
 def delete_notification_view(request, notification_id):
     # ตรวจสอบสิทธิ์: ต้องเป็นเจ้าของโพสหรือ super_admin
@@ -701,10 +641,6 @@ def user_profile_view(request):
     }
     return render(request, 'myapp/user/profile.html', context)
 
-
-
-
-
 @login_required # หรือไม่ใส่ก็ได้ ขึ้นอยู่กับว่าคุณต้องการให้ใครเห็นแผนที่บ้าง
 def lost_dogs_map_view(request):
 
@@ -712,8 +648,6 @@ def lost_dogs_map_view(request):
         'map_title': "แผนที่ค้นหาสุนัขสูญหาย",
     }
     return render(request, 'myapp/map/map.html', context)
-
-
 
 @login_required
 def report_lost_dog_view(request, dog_id):
@@ -787,8 +721,6 @@ def lost_dogs_map_data(request):
         
     return JsonResponse({'dogs': data})
 
-
-
 @login_required
 def matchdog(request):
     if request.method == 'POST':
@@ -815,8 +747,95 @@ def matchdog(request):
         return render(request, 'myapp/matchdog/matchdog.html', context)
         
     return render(request, 'myapp/matchdog/matchdog.html')
-#model managements  
 
+#model managements  ------------------------------------------------------------------------
+
+
+# @login_required
+# def admin_page(request):
+#     if not request.user.is_staff:
+#         messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้')
+#         return redirect('home')
+#     return render(request, 'admin/index.html')
+def admin_page(request):
+    # ดึงผลการทดสอบล่าสุด
+    latest_result = KNNTrainingResult.objects.order_by('-created_at').first()
+    
+    # ดึงประวัติการทดสอบทั้งหมด (เรียงตามเวลาล่าสุดก่อน)
+    test_history = KNNTrainingResult.objects.order_by('-created_at')[:20]
+    
+    context = {
+        'latest_result': latest_result,
+        'test_history': test_history,
+    }
+    return render(request, 'admin/dashdoardAI/dashdoard.html', context)
+
+from .serverFast import trainKNN
+
+def page_testEMBmodel(request):
+    # ดึงผลการทดสอบล่าสุด
+    latest_result = KNNTrainingResult.objects.order_by('-created_at').first()
+    
+    context = {
+        'result': latest_result,
+    }
+    return render(request, 'admin/Training/set_TestKNN.html', context)
+
+def page_select_model(request):
+    return render(request, 'admin/Training/select_model.html')
+
+def select_model(request):
+    pass
+
+def TestEmbModel(request):
+    pass
+
+def set_auto_training(request):
+    from datetime import datetime, time, timedelta
+    from django.utils import timezone
+    from dateutil.relativedelta import relativedelta
+    
+    config = TrainingConfig.objects.first()
+    form = TrainingScheduleForm(instance=config)
+    next_training_time = None
+    countdown_seconds = None
+
+    if config and config.scheduled_time:
+        try:
+            hour, minute = map(int, config.scheduled_time.split(':'))
+            now = timezone.now()
+            
+            # เริ่มต้นจากเวลาที่ตั้งไว้ของ "วันนี้"
+            target = timezone.make_aware(datetime.combine(now.date(), time(hour, minute)))
+
+            # Logic การบวกเวลาตามที่คุณต้องการ
+            if config.frequency == 'daily':
+                # บวกไป 1 วันเสมอจากวันนี้
+                next_training_time = target + relativedelta(days=1)
+            
+            elif config.frequency == 'weekly':
+                # บวกไป 1 สัปดาห์ (7 วัน) เสมอจากวันนี้
+                next_training_time = target + relativedelta(weeks=1)
+            
+            elif config.frequency == 'monthly':
+                # เป็นวันที่เดียวกัน แต่เป็นเดือนถัดไปเสมอ
+                next_training_time = target + relativedelta(months=1)
+
+            # คำนวณวินาทีสำหรับ Countdown
+            if next_training_time:
+                countdown_seconds = int((next_training_time - now).total_seconds())
+            
+        except Exception as e:
+            print(f"Error: {e}")
+
+    context = {
+        'config': config,
+        'form': form,
+        'countdown_seconds': countdown_seconds,
+        'next_training_time': next_training_time,
+        'cache_triggered': cache.get('training_triggered', False),
+    }
+    return render(request, 'admin/Training/SetautoTraining.html', context)
 
 def set_time_auto_training(request):
     config = TrainingConfig.objects.first()
@@ -831,21 +850,43 @@ def set_time_auto_training(request):
             cache.set("AUTO_TRAIN_ACTIVE", obj.is_active, None)
 
             update_scheduler()  # รีโหลด scheduler ใหม่ทันที
-
+            
+            messages.success(
+                request,
+                f"ตั้งเวลาสำเร็จ! ระบบจะเริ่มทำงานทุก {obj.get_frequency_display()} เวลา {obj.scheduled_time}"
+            )
             return redirect('set_auto_training')
         else:
             form = TrainingScheduleForm(instance=config)
 
         return render(request, 'admin/Training/SetautoTraining.html', {'form': form})
+    
+import base64
+from django.core.files.base import ContentFile
+from .models import KNNTrainingResult
 
+def base64_to_image(base64_str, filename, default_ext="png"):
+    """
+    รองรับทั้ง:
+    - data:image/png;base64,...
+    - base64 ล้วน ๆ
+    """
+    if ';base64,' in base64_str:
+        header, imgstr = base64_str.split(';base64,')
+        ext = header.split('/')[-1]
+    else:
+        imgstr = base64_str
+        ext = default_ext
 
-
-
+    return ContentFile(
+        base64.b64decode(imgstr),
+        name=f"{filename}.{ext}"
+    )
 
 @staff_member_required
 def train_knn_view(request):
+    # 1. ดึงข้อมูลที่มี Embedding
     images = DogImage.objects.exclude(embedding_binary__isnull=True)
-
     train_data = []
 
     for img in images:
@@ -855,23 +896,70 @@ def train_knn_view(request):
 
         train_data.append({
             "dog_id": img.dog_id,
-            "embedding_b64": embedding_b64   # ✅ ชื่อตรง
+            "embedding_b64": embedding_b64
         })
 
     if not train_data:
         return JsonResponse(
-            {"status": "error", "message": "ไม่มี embedding"},
+            {"status": "error", "message": "ไม่มี embedding ในระบบ"},
             status=400
         )
 
-    response = requests.post(
-        "https://3f03a05d7b85.ngrok-free.app/train-knn/",
-        json={"data": train_data},
-        timeout=120
-    )
+    try:
+        # 2. ส่งข้อมูลไปยัง FastAPI
+        # เพิ่ม timeout เผื่อกรณี t-SNE ใช้เวลาคำนวณนาน
+        response = requests.post(
+            "http://127.0.0.1:8001/test-knn/",
+            json={"data": train_data},
+            timeout=180 
+        )
+        result_data = response.json()
 
-    return JsonResponse(response.json(), status=response.status_code)
+        if response.status_code == 200:
+            tsne_b64 = result_data.get("tsne_plot")
+            knn_b64 = result_data.get("knn_matrix")
 
+            result = KNNTrainingResult.objects.create(
+                count=len(train_data),
+                tsne_image=base64_to_image(tsne_b64, "tsne_plot"),
+                knn_matrix_image=base64_to_image(knn_b64, "knn_matrix"),
+                accuracy=result_data.get("accuracy", 0.0)
+            )
+            return render(request, 'admin/Training/set_TestKNN.html', {
+                'result': result
+            })
+        else:
+            return JsonResponse({
+                "status": "error", 
+                "message": f"FastAPI Error: {result_data.get('detail', 'Unknown error')}"
+            }, status=response.status_code)
+
+    except requests.RequestException as e:
+        return JsonResponse(
+            {"status": "error", "message": f"ไม่สามารถเชื่อมต่อ FastAPI ได้: {str(e)}"},
+            status=500
+        )
+@login_required
+@staff_member_required
+def get_knn_result_api(request, result_id):
+    """API endpoint เพื่อดึงข้อมูล KNN result เป็น JSON"""
+    try:
+        result = KNNTrainingResult.objects.get(pk=result_id)
+        
+        data = {
+            'id': result.id,
+            'count': result.count,
+            'accuracy': result.accuracy,
+            'created_at': result.created_at.isoformat(),
+            'tsne_image': result.tsne_image.url if result.tsne_image else None,
+            'knn_matrix_image': result.knn_matrix_image.url if result.knn_matrix_image else None,
+        }
+        return JsonResponse(data)
+    except KNNTrainingResult.DoesNotExist:
+        return JsonResponse(
+            {"status": "error", "message": "ไม่พบผลการทดสอบนี้"},
+            status=404
+        )
 
 @login_required
 def request_adoption_view(request, dog_id):
@@ -961,5 +1049,4 @@ def handle_adoption_request_view(request, request_id, action):
         messages.info(request, f"ปฏิเสธคำขอของ {adoption_req.user.username} แล้ว")
         
     return redirect('adoption_request_list')
-
 
