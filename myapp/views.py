@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
-from .models import Dog, DogImage, User,Notification, AdoptionParent
+from .models import Dog, DogImage, User,Notification, AdoptionParent, AdoptionRequest
 from django.db.models import Q
 from django.db import models
 from django.http import JsonResponse
@@ -798,6 +798,7 @@ def matchdog(request):
         # Mock: สุ่มสุนัขมา 5 ตัว
         # order_by('?') เป็นการ random จาก database (ช้าถ้าข้อมูลเยอะ แต่สำหรับ mock ok)
         search_results = list(Dog.objects.all().order_by('?')[:5])
+
         
         # Mock similarity score
         import random
@@ -870,5 +871,95 @@ def train_knn_view(request):
     )
 
     return JsonResponse(response.json(), status=response.status_code)
+
+
+@login_required
+def request_adoption_view(request, dog_id):
+    dog = get_object_or_404(Dog, pk=dog_id)
+    
+    # Check if request already exists
+    existing_request = AdoptionRequest.objects.filter(user=request.user, dog=dog, status='PENDING').exists()
+    
+    if existing_request:
+        messages.warning(request, "คุณได้ส่งคำขออุปการะสุนัขตัวนี้ไปแล้ว กรุณารอการตรวจสอบ")
+        return redirect('dog_detail', dog_id=dog_id)
+        
+    if request.method == 'POST':
+        reason = request.POST.get('reason', '')
+        
+        AdoptionRequest.objects.create(
+            user=request.user,
+            dog=dog,
+            request_reason=reason
+        )
+        
+        messages.success(request, "ส่งคำขออุปการะสำเร็จ! เจ้าหน้าที่กำลังตรวจสอบข้อมูลของคุณ")
+        return redirect('dog_detail', dog_id=dog_id)
+    
+    return redirect('dog_detail', dog_id=dog_id)
+
+
+@login_required
+def adoption_request_list_view(request):
+    # Only Org Admin or Staff
+    if request.user.role != 'org_admin' and not request.user.is_staff:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+        return redirect('home')
+        
+    # Filter requests for organization dogs
+    if request.user.role == 'org_admin':
+        # Assuming org_admin manages all dogs with organization=True
+        # Or if there is a link between org_admin and organization, filter by that.
+        # Based on existing code, org_admin sees all organization=True dogs.
+        dogs = Dog.objects.filter(organization=True)
+        requests_list = AdoptionRequest.objects.filter(dog__in=dogs, status='PENDING').order_by('-created_at')
+    else:
+        # Staff sees all
+        requests_list = AdoptionRequest.objects.filter(status='PENDING').order_by('-created_at')
+        
+    context = {
+        'requests': requests_list,
+        'title': "รายการคำขออุปการะ"
+    }
+    return render(request, 'myapp/admin_org/adoption_request_list.html', context)
+
+
+@login_required
+def handle_adoption_request_view(request, request_id, action):
+    # action: 'approve' or 'reject'
+    adoption_req = get_object_or_404(AdoptionRequest, pk=request_id)
+    
+    # Permission check
+    if request.user.role != 'org_admin' and not request.user.is_staff:
+        messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการ")
+        return redirect('home')
+        
+    if action == 'approve':
+        adoption_req.status = 'APPROVED'
+        adoption_req.save()
+        
+        # Create AdoptionParent relation
+        AdoptionParent.objects.get_or_create(
+            user=adoption_req.user,
+            dog=adoption_req.dog
+        )
+        
+        # Create Notification for the user
+        Notification.objects.create(
+            title=f"ยินดีด้วย! คำขออุปการะ {adoption_req.dog.name} ได้รับการอนุมัติ",
+            content=f"ทางองค์กรได้อนุมัติคำขอของคุณแล้ว คุณสามารถมารับน้อง {adoption_req.dog.name} ได้ที่ศูนย์ หรือติดต่อเจ้าหน้าที่.",
+            notification_type='DOG_SPECIFIC',
+            dog=adoption_req.dog,
+            organization=request.user, # The admin who approved
+        )
+        
+        messages.success(request, f"อนุมัติคำขอของ {adoption_req.user.username} เรียบร้อยแล้ว")
+        
+    elif action == 'reject':
+        adoption_req.status = 'REJECTED'
+        adoption_req.save()
+        messages.info(request, f"ปฏิเสธคำขอของ {adoption_req.user.username} แล้ว")
+        
+    return redirect('adoption_request_list')
 
 

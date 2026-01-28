@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-8 bg-white/90 rounded-lg">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+             💌 {{ title }}
+        </h1>
+        <a href="{% url 'home' %}" class="btn btn-outline">กลับหน้าหลัก</a>
+    </div>
+
+    {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} mb-2">
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="table w-full">
+            <!-- head -->
+            <thead>
+                <tr>
+                    <th>ลำดับ</th>
+                    <th>วันที่ส่งคำขอ</th>
+                    <th>ผู้ขออุปการะ</th>
+                    <th>น้องหมา</th>
+                    <th>เหตุผล</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                    <tr>
+                        <th>{{ forloop.counter }}</th>
+                        <td>{{ req.created_at|date:"d M Y H:i" }}</td>
+                        <td>
+                            <div class="flex items-center space-x-3">
+                                <div>
+                                    <div class="font-bold">{{ req.user.username }}</div>
+                                    <div class="text-sm opacity-50">{{ req.user.email }}</div>
+                                    <div class="text-sm opacity-50">{{ req.user.phone }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex items-center space-x-3">
+                                <div class="avatar">
+                                    <div class="mask mask-squircle w-12 h-12">
+                                        {% if req.dog.images.first %}
+                                            <img src="{{ req.dog.images.first.image.url }}" alt="{{ req.dog.name }}" />
+                                        {% else %}
+                                            <img src="https://via.placeholder.com/48" alt="No image" />
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-bold">{{ req.dog.name }}</div>
+                                    <div class="text-sm opacity-50">{{ req.dog.get_gender_display }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <p class="whitespace-pre-wrap max-w-xs">{{ req.request_reason|default:"-" }}</p>
+                        </td>
+                        <th>
+                            <div class="flex gap-2">
+                                <a href="{% url 'handle_adoption_request' req.id 'approve' %}" class="btn btn-success btn-xs" onclick="return confirm('ยืนยันอนุมัติคำขอ?')">อนุมัติ</a>
+                                <a href="{% url 'handle_adoption_request' req.id 'reject' %}" class="btn btn-error btn-xs" onclick="return confirm('ยืนยันปฏิเสธคำขอ?')">ปฏิเสธ</a>
+                            </div>
+                        </th>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">
+                            ไม่มีคำขออุปการะที่รอการตรวจสอบ
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

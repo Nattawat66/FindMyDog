@@ -53,6 +53,11 @@ urlpatterns = [
     # URL สำหรับเกี่ยวกับจัดการ model
     path('model/retrain/', views.set_time_auto_training, name='retrain_model'),
     # path("debug/cache/", debug_cache),
-    path('train-knn/', views.train_knn_view, name='train_knn')
+    path('train-knn/', views.train_knn_view, name='train_knn'),
+    
+    # Adoption Request URLs
+    path('dogs/<int:dog_id>/request_adoption/', views.request_adoption_view, name='request_adoption'),
+    path('adoption_requests/', views.adoption_request_list_view, name='adoption_request_list'),
+    path('adoption_requests/<int:request_id>/<str:action>/', views.handle_adoption_request_view, name='handle_adoption_request'),
     ]
 

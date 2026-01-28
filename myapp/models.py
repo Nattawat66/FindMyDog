@@ -254,3 +254,47 @@ class TrainingConfig(models.Model):
     class Meta:
         verbose_name = "Training Configuration"
         verbose_name_plural = "Training Configurations"
+
+
+class AdoptionRequest(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'รอการตรวจสอบ'),
+        ('APPROVED', 'อนุมัติ'),
+        ('REJECTED', 'ปฏิเสธ'),
+    ]
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='adoption_requests',
+        verbose_name="ผู้ขออุปการะ"
+    )
+    dog = models.ForeignKey(
+        Dog, 
+        on_delete=models.CASCADE, 
+        related_name='adoption_requests',
+        verbose_name="สุนัข"
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='PENDING',
+        verbose_name="สถานะคำขอ"
+    )
+    request_reason = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="เหตุผลความต้องการ"
+    )
+    admin_feedback = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="เหตุผลจากแอดมิน"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="วันที่ส่งคำขอ")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "คำขอเป็นพ่อแม่บุญธรรม"
+        
+    def __str__(self):
+        return f"คำขอจาก {self.user.username} เพื่อรับเลี้ยง {self.dog.name} ({self.get_status_display()})"
