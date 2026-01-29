@@ -728,31 +728,54 @@ def lost_dogs_map_data(request):
 
 @login_required
 def matchdog(request):
-    if request.method == 'POST':
-        # รับไฟล์ภาพ (แม้จะยังไม่ได้เอาไปเข้า AI จริงๆ)
-        image = request.FILES.get('image')
+    if request.method == 'POST' and request.FILES.get('image'):
+        image_file = request.FILES.get('image')
         
-        # Mock: สุ่มสุนัขมา 5 ตัว
-        # order_by('?') เป็นการ random จาก database (ช้าถ้าข้อมูลเยอะ แต่สำหรับ mock ok)
-        search_results = list(Dog.objects.all().order_by('?')[:5])
-
+        # 1. ส่งรูปไปยัง API
+        api_url = "http://localhost:8001/SEARCH-DOG02/" 
         
-        # Mock similarity score
-        import random
-        for dog in search_results:
-            dog.similarity_score = random.randint(60, 99)
+        try:
+            files = {'file': (image_file.name, image_file.read(), image_file.content_type)}
+            response = requests.post(api_url, files=files, timeout=30) # เพิ่ม timeout เพราะ AI อาจใช้เวลา
+            response.raise_for_status()
             
-        # เรียงลำดับตามความเหมือน (mock)
-        search_results.sort(key=lambda x: x.similarity_score, reverse=True)
+            # 2. รับผลลัพธ์ {"results": [{"rank": 1, "dog_id": "...", "distance": ...}, ...]}
+            api_response = response.json()
+            api_results = api_response.get('results', [])
+
+            search_results = []
+            for item in api_results:
+                filename_from_api = item['dog_id'] # ในกรณีนี้คือเลข 27
+                
+                try:
+                    # เปลี่ยนมาใช้ id=filename_from_api แทน
+                    dog = Dog.objects.filter(id=filename_from_api).first()
+                    
+                    if dog:
+                        dog.distance = round(item['distance'], 4)
+                        # คำนวณ Score จาก Distance (ถ้า distance น้อย score จะสูง)
+                        dog.similarity_score = max(0, 100 - int(item['distance'] * 10)) 
+                        
+                        search_results.append(dog)
+                    else:
+                        print(f"Dog ID {filename_from_api} not found in database.")
+
+                except Exception as e:
+                    print(f"Error fetching dog {filename_from_api}: {e}")
+                    continue
+
+        except requests.exceptions.RequestException as e:
+            print(f"API Connection Error: {e}")
+            search_results = []
 
         context = {
             'search_results': search_results,
-            'is_result': True, # Flag เพื่อบอก Template ว่าแสดงผลลัพธ์
+            'is_result': True,
         }
+        print(context)
         return render(request, 'myapp/matchdog/matchdog.html', context)
         
     return render(request, 'myapp/matchdog/matchdog.html')
-
 #model managements  ------------------------------------------------------------------------
 
 @login_required
