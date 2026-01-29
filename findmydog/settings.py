@@ -69,7 +69,8 @@ INSTALLED_APPS = [
 
 CRONJOBS = [
     (
-        '0 2 * * *',  # ตี 2 ทุกวัน (แนะนำกว่ารันทุกนาที)
+        '*/1 * * * *',
+        # '0 2 * * *',  # ตี 2 ทุกวัน (แนะนำกว่ารันทุกนาที)
         'myapp.serverFast.trainKNN',
         '>> /home/jaruvitgitant/Documents/Project_findmydog/Webapp/FindMyDog/cron_debug.log 2>&1'
     ),
@@ -136,8 +137,8 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "mydb",
-        "USER": "admin",
+        "NAME": "project_db_name",
+        "USER": "postgres",
         "PASSWORD": "1234",
         "HOST": "localhost",
         "PORT": "5432",

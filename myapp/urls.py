@@ -55,6 +55,7 @@ urlpatterns = [
     path('page/testEMBmodel/', views.page_testEMBmodel, name='testEMBmodel'),
     path('test-performanch-model/', views.TestEmbModel),
     path('train-knn/', views.train_knn_view, name='train_knn'),
+    path('history-knn/', views.knn_test_history_view, name='history_knn'),
 
     path('page/select-model/', views.page_select_model, name='page_select_model'),
     path('select-model/', views.select_model, name='select_model'),
@@ -63,5 +64,7 @@ urlpatterns = [
     
     # API endpoint for getting KNN result data
     path('api/knn-result/<int:result_id>/', views.get_knn_result_api, name='get_knn_result_api'),
+    # API endpoint for CPU stats
+    path('api/cpu-stats/', views.get_cpu_stats, name='get_cpu_stats'),
     # path('trainKNN/', views.trigger_train_knn, name='trainKNN')
 ]

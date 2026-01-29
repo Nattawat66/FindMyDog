@@ -69,6 +69,12 @@
                    class="block px-4 py-2 text-sm font-medium transition-colors rounded-lg">
                    Auto Training Schedule
                 </a>
+                <a href="{% url 'page_select_model' %}" 
+                    @click="activeSection = 'select model'"
+                    :class="activeSection === 'select model' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:text-gray-900'"
+                    class="block px-4 py-2 text-sm font-medium transition-colors rounded-lg">
+                    Select Model
+                </a>
                 
             </div>
         </div>
@@ -88,18 +94,19 @@
             </button>
 
             <div x-show="openMenus.performance" x-collapse class="pl-10 space-y-1">
+                <a href="{% url 'history_knn' %}" 
+                   @click="activeSection = 'test-knn'"
+                   :class="activeSection === 'test-knn' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:text-gray-900'"
+                   class="block px-4 py-2 text-sm font-medium transition-colors rounded-lg">
+                   history_KNN Test
+                </a>
                 <a href="{% url 'testEMBmodel' %}" 
                    @click="activeSection = 'test-knn'"
                    :class="activeSection === 'test-knn' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:text-gray-900'"
                    class="block px-4 py-2 text-sm font-medium transition-colors rounded-lg">
                    Test KNN Accuracy
                 </a>
-                <a href="{% url 'page_select_model' %}" 
-                    @click="activeSection = 'select model'"
-                    :class="activeSection === 'select model' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:text-gray-900'"
-                    class="block px-4 py-2 text-sm font-medium transition-colors rounded-lg">
-                    Select Model
-                </a>
+
             </div>
         </div>
     </nav>

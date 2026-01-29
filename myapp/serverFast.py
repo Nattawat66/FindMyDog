@@ -8,7 +8,7 @@ from .models import DogImage
 logger = logging.getLogger(__name__)
 
 FASTAPI_BASE_URL = "http://127.0.0.1:8001"
-TRAIN_ENDPOINT = "/TRAIN-KNN02/"
+TRAIN_ENDPOINT = "/tiger_knnTrain/"
 
 
 def trainKNN():

@@ -304,4 +304,5 @@ class KNNTrainingResult(models.Model):
     tsne_image = models.ImageField(upload_to="knn/tsne/")
     knn_matrix_image = models.ImageField(upload_to="knn/matrix/")
     count = models.IntegerField()
-    accuracy = models.FloatField()  
+    accuracy = models.FloatField()
+    model_name = models.CharField(max_length=255, default="unknown", verbose_name="ชื่อ Model ที่ใช้")  

@@ -24,6 +24,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from datetime import datetime, time
+import psutil
+import json
 
 # ---------- UI Render Views ----------
 @login_required
@@ -247,7 +249,7 @@ def register_dog_page(request):
             formset.instance = dog
             formset.save()
             dog_images = DogImage.objects.filter(dog=dog)
-            url = "https://3f03a05d7b85.ngrok-free.app/embedding-image/"
+            url = "http://localhost:8001/embedding-image/"
 
             files = []
             for img in dog_images:
@@ -275,28 +277,30 @@ def register_dog_page(request):
             if response.status_code == 200:
                 results = response.json().get('results', [])
 
+                # สร้าง map เพื่อให้หาภาพได้เร็วขึ้น
                 image_map = {
                     os.path.basename(img.image.name): img
                     for img in dog_images
                 }
 
                 for item in results:
-                    file_name = os.path.basename(item.get('file_name', ''))
-                    embedding_base64 = item.get('embedding_bytes')
+                    # **จุดที่ต้องแก้: Key ต้องตรงกับ API**
+                    file_name = item.get('filename') 
+                    emb_str = item.get('embedding_base64')
 
-                    if not embedding_base64 or file_name not in image_map:
+                    if not emb_str or file_name not in image_map:
+                        print(f"⚠️ Skip: {file_name} not found or no embedding")
                         continue
 
-                    if ',' in embedding_base64:
-                        embedding_base64 = embedding_base64.split(',')[-1]
+                    # แปลง Base64 String กลับเป็น Binary
+                    embedding_binary = base64.b64decode(emb_str)
 
-                    embedding_binary = base64.b64decode(embedding_base64)
-
+                    # บันทึกลง database
                     dog_image = image_map[file_name]
                     dog_image.embedding_binary = embedding_binary
                     dog_image.save()
 
-                    print("✅ Saved embedding:", file_name)
+                    print(f"✅ Saved embedding for: {file_name}")
             
             # 3. แสดงข้อความสำเร็จและ Redirect
             # messages.success(request, f'ลงทะเบียนสุนัข "{dog.name}" สำเร็จแล้ว!')
@@ -311,6 +315,7 @@ def register_dog_page(request):
         'role' : role,
     }
     return render(request, 'myapp/dog/registerdog.html', context)
+
 @csrf_protect
 def register(request):
     if request.method == 'POST':
@@ -750,6 +755,53 @@ def matchdog(request):
 
 #model managements  ------------------------------------------------------------------------
 
+@login_required
+@staff_member_required
+@csrf_exempt
+def get_cpu_stats(request):
+    """API endpoint เพื่อดึงข้อมูล CPU และ System Stats"""
+    try:
+        # ดึงข้อมูล CPU per core
+        cpu_percent_per_core = psutil.cpu_percent(interval=1.10, percpu=True)
+        cpu_percent_overall = psutil.cpu_percent(interval=1.10)
+        
+        # ดึงข้อมูล Memory
+        memory_info = psutil.virtual_memory()
+        
+        # ดึงข้อมูล Disk
+        disk_info = psutil.disk_usage('/')
+        
+        # ดึงข้อมูล Process count
+        process_count = len(psutil.pids())
+        
+        data = {
+            'cpu': {
+                'overall': cpu_percent_overall,
+                'per_core': cpu_percent_per_core,
+                'count': psutil.cpu_count(logical=True),
+            },
+            'memory': {
+                'total': memory_info.total,
+                'available': memory_info.available,
+                'percent': memory_info.percent,
+                'used': memory_info.used,
+            },
+            'disk': {
+                'total': disk_info.total,
+                'used': disk_info.used,
+                'free': disk_info.free,
+                'percent': disk_info.percent,
+            },
+            'processes': process_count,
+            'timestamp': datetime.now().isoformat(),
+        }
+        
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
+
 
 # @login_required
 # def admin_page(request):
@@ -908,6 +960,7 @@ def train_knn_view(request):
     try:
         # 2. ส่งข้อมูลไปยัง FastAPI
         # เพิ่ม timeout เผื่อกรณี t-SNE ใช้เวลาคำนวณนาน
+        print(train_data)
         response = requests.post(
             "http://127.0.0.1:8001/test-knn/",
             json={"data": train_data},
@@ -918,12 +971,14 @@ def train_knn_view(request):
         if response.status_code == 200:
             tsne_b64 = result_data.get("tsne_plot")
             knn_b64 = result_data.get("knn_matrix")
+            model_name = result_data.get("model_name", "unknown")
 
             result = KNNTrainingResult.objects.create(
                 count=len(train_data),
                 tsne_image=base64_to_image(tsne_b64, "tsne_plot"),
                 knn_matrix_image=base64_to_image(knn_b64, "knn_matrix"),
-                accuracy=result_data.get("accuracy", 0.0)
+                accuracy=result_data.get("accuracy", 0.0),
+                model_name=model_name
             )
             return render(request, 'admin/Training/set_TestKNN.html', {
                 'result': result
@@ -939,6 +994,36 @@ def train_knn_view(request):
             {"status": "error", "message": f"ไม่สามารถเชื่อมต่อ FastAPI ได้: {str(e)}"},
             status=500
         )
+def knn_test_history_view(request):
+    # จัดการการลบข้อมูล
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'delete_all':
+            # ลบทั้งหมด
+            KNNTrainingResult.objects.all().delete()
+            messages.success(request, "ลบประวัติการทดสอบทั้งหมดเรียบร้อยแล้ว")
+            return redirect('history_knn')
+        
+        elif action == 'delete_single':
+            # ลบรายการเดียว
+            result_id = request.POST.get('result_id')
+            try:
+                result = KNNTrainingResult.objects.get(pk=result_id)
+                result.delete()
+                messages.success(request, f"ลบประวัติการทดสอบ (ID: {result_id}) เรียบร้อยแล้ว")
+            except KNNTrainingResult.DoesNotExist:
+                messages.error(request, "ไม่พบประวัติการทดสอบนี้")
+            return redirect('history_knn')
+    
+    results = KNNTrainingResult.objects.order_by('-created_at')
+    context = {
+        'results': results,
+        'title': "ประวัติการทดสอบ KNN Model",
+        'test_history': results,  # ส่ง test_history เพื่อให้ template ใช้งานได้
+    }
+    return render(request, 'admin/Training/history_Knn.html', context)
+
 @login_required
 @staff_member_required
 def get_knn_result_api(request, result_id):
@@ -950,6 +1035,7 @@ def get_knn_result_api(request, result_id):
             'id': result.id,
             'count': result.count,
             'accuracy': result.accuracy,
+            'model_name': result.model_name,
             'created_at': result.created_at.isoformat(),
             'tsne_image': result.tsne_image.url if result.tsne_image else None,
             'knn_matrix_image': result.knn_matrix_image.url if result.knn_matrix_image else None,

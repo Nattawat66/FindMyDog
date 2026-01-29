@@ -196,7 +196,6 @@ function clockDisplay() {
     }
 }
 
-
 function trainingLog() {
     return {
         logs: [],
@@ -206,7 +205,7 @@ function trainingLog() {
     
         connect() {
             if (this.isConnected) return;
-    
+
             try {
             // สร้าง EventSource เพื่อเชื่อมต่อกับ SSE endpoint
             this.eventSource = new EventSource(this.fastApiUrl);

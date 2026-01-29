@@ -10,6 +10,33 @@
                         <p class="text-indigo-100">จัดการและควบคุมระบบ AI Model ของคุณได้จากที่นี่</p>
                     </div>
 
+                    <!-- System Monitor Section -->
+                    <!-- <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+                        <div class="bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-4">
+                            <h2 class="text-xl font-bold text-white flex items-center">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                System Monitor
+                            </h2>
+                            <p class="text-blue-100 text-sm mt-1">จำนวนการประมวลผลของระบบ</p>
+                        </div>
+                        
+                        <div class="p-6">
+                            <div id="systemMonitorContent">
+
+                                <div class="flex justify-center items-center py-12">
+                                    <div class="animate-spin">
+                                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="ml-2 text-gray-600">กำลังโหลดข้อมูล...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+
                     <!-- Latest Test Results Section -->
                     <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
                         <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
@@ -433,5 +460,328 @@
                             alert('ไม่สามารถโหลดข้อมูลได้');
                         });
                 }
+
+                // // System Monitor Functions
+                // let cpuChart = null;
+                // let cpuDataPoints = [];
+                // let cpuCoreDataPoints = [];
+                // let cpuLabels = [];
+                // let isInitialized = false;
+
+                // async function loadSystemStats() {
+                //     try {
+                //         const response = await fetch('/api/cpu-stats/');
+                //         const data = await response.json();
+                        
+                //         if (data.error) {
+                //             console.error('API Error:', data.error);
+                //             return;
+                //         }
+
+                //         // เก็บข้อมูล CPU ไว้ max 60 จุด (1 นาที)
+                //         const now = new Date();
+                //         cpuDataPoints.push(data.cpu.overall);
+                //         cpuLabels.push(now.toLocaleTimeString('th-TH'));
+                        
+                //         // เก็บข้อมูล per core
+                //         if (!cpuCoreDataPoints.length) {
+                //             cpuCoreDataPoints = data.cpu.per_core.map(() => []);
+                //         }
+                //         data.cpu.per_core.forEach((usage, index) => {
+                //             cpuCoreDataPoints[index].push(usage);
+                //         });
+                        
+                //         if (cpuDataPoints.length > 60) {
+                //             cpuDataPoints.shift();
+                //             cpuLabels.shift();
+                //             cpuCoreDataPoints.forEach(core => core.shift());
+                //         }
+
+                //         // ครั้งแรก: render ทั้งหมด
+                //         if (!isInitialized) {
+                //             renderSystemMonitorInitial(data);
+                //             isInitialized = true;
+                //             setTimeout(initCpuChart, 300);
+                //         } else {
+                //             // Update แบบ smooth เฉพาะค่า
+                //             updateSystemStatsSmooth(data);
+                //             // Update chart
+                //             if (cpuChart) {
+                //                 cpuChart.data.labels = cpuLabels;
+                //                 cpuChart.data.datasets.forEach((dataset, index) => {
+                //                     if (index === 0) {
+                //                         dataset.data = cpuDataPoints;
+                //                     } else {
+                //                         dataset.data = cpuCoreDataPoints[index - 1];
+                //                     }
+                //                 });
+                //                 cpuChart.update('none'); // update without animation
+                //             }
+                //         }
+                //     } catch (error) {
+                //         console.error('Failed to load system stats:', error);
+                //     }
+                // }
+
+                // function renderSystemMonitorInitial(data) {
+                //     const html = `
+                //         <div class="space-y-6">
+                //             <!-- CPU Chart -->
+                //             <div class="bg-gray-50 rounded-lg border border-gray-300 p-4">
+                //                 <h3 class="font-semibold text-gray-800 mb-3">📊 CPU Usage</h3>
+                //                 <canvas id="cpuChart" height="80"></canvas>
+                //             </div>
+
+                //             <!-- System Stats Grid -->
+                //             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                //                 <!-- CPU Overall -->
+                //                 <div class="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200 transition-all duration-300">
+                //                     <p class="text-xs font-medium text-red-600 uppercase">CPU Overall</p>
+                //                     <p class="text-2xl font-bold text-red-900 mt-2" id="cpuOverallValue">${data.cpu.overall.toFixed(1)}%</p>
+                //                     <div class="w-full bg-red-200 rounded-full h-2 mt-2">
+                //                         <div class="bg-red-600 h-2 rounded-full transition-all duration-300" id="cpuOverallBar" style="width: ${data.cpu.overall}%"></div>
+                //                     </div>
+                //                 </div>
+
+                //                 <!-- Memory Usage -->
+                //                 <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200 transition-all duration-300">
+                //                     <p class="text-xs font-medium text-blue-600 uppercase">Memory</p>
+                //                     <p class="text-2xl font-bold text-blue-900 mt-2" id="memoryValue">${data.memory.percent.toFixed(1)}%</p>
+                //                     <div class="w-full bg-blue-200 rounded-full h-2 mt-2">
+                //                         <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="memoryBar" style="width: ${data.memory.percent}%"></div>
+                //                     </div>
+                //                     <p class="text-xs text-blue-700 mt-2" id="memoryDetail">${(data.memory.used / (1024**3)).toFixed(1)} GB / ${(data.memory.total / (1024**3)).toFixed(1)} GB</p>
+                //                 </div>
+
+                //                 <!-- Disk Usage -->
+                //                 <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200 transition-all duration-300">
+                //                     <p class="text-xs font-medium text-green-600 uppercase">Disk</p>
+                //                     <p class="text-2xl font-bold text-green-900 mt-2" id="diskValue">${data.disk.percent.toFixed(1)}%</p>
+                //                     <div class="w-full bg-green-200 rounded-full h-2 mt-2">
+                //                         <div class="bg-green-600 h-2 rounded-full transition-all duration-300" id="diskBar" style="width: ${data.disk.percent}%"></div>
+                //                     </div>
+                //                     <p class="text-xs text-green-700 mt-2" id="diskDetail">${(data.disk.used / (1024**3)).toFixed(1)} GB / ${(data.disk.total / (1024**3)).toFixed(1)} GB</p>
+                //                 </div>
+
+                //                 <!-- Process Count -->
+                //                 <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200 transition-all duration-300">
+                //                     <p class="text-xs font-medium text-purple-600 uppercase">Processes</p>
+                //                     <p class="text-2xl font-bold text-purple-900 mt-2" id="processesValue">${data.processes}</p>
+                //                     <p class="text-xs text-purple-700 mt-3">Active processes</p>
+                //                 </div>
+                //             </div>
+
+                //             <!-- CPU Per Core -->
+                //             <div class="bg-gray-50 rounded-lg border border-gray-300 p-4">
+                //                 <h4 class="font-semibold text-gray-800 mb-3">CPU Per Core</h4>
+                //                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2" id="cpuCoresContainer">
+                //                     ${data.cpu.per_core.map((usage, index) => {
+                //                         const colors = [
+                //                             { bg: 'bg-red-50', border: 'border-red-200', bar: 'bg-red-600', text: 'text-red-600' },
+                //                             { bg: 'bg-blue-50', border: 'border-blue-200', bar: 'bg-blue-600', text: 'text-blue-600' },
+                //                             { bg: 'bg-green-50', border: 'border-green-200', bar: 'bg-green-600', text: 'text-green-600' },
+                //                             { bg: 'bg-yellow-50', border: 'border-yellow-200', bar: 'bg-yellow-600', text: 'text-yellow-600' },
+                //                             { bg: 'bg-purple-50', border: 'border-purple-200', bar: 'bg-purple-600', text: 'text-purple-600' },
+                //                             { bg: 'bg-pink-50', border: 'border-pink-200', bar: 'bg-pink-600', text: 'text-pink-600' },
+                //                             { bg: 'bg-indigo-50', border: 'border-indigo-200', bar: 'bg-indigo-600', text: 'text-indigo-600' },
+                //                             { bg: 'bg-cyan-50', border: 'border-cyan-200', bar: 'bg-cyan-600', text: 'text-cyan-600' },
+                //                         ];
+                //                         const color = colors[index % colors.length];
+                //                         return `
+                //                             <div class="p-2 rounded border transition-all duration-300 ${color.bg} ${color.border}" id="core-${index}">
+                //                                 <p class="text-xs ${color.text} font-semibold">Core ${index}</p>
+                //                                 <p class="text-lg font-bold text-gray-800" id="core-${index}-value">${usage.toFixed(1)}%</p>
+                //                                 <div class="w-full bg-gray-300 rounded-full h-1 mt-1">
+                //                                     <div class="${color.bar} h-1 rounded-full transition-all duration-300" id="core-${index}-bar" style="width: ${usage}%"></div>
+                //                                 </div>
+                //                             </div>
+                //                         `;
+                //                     }).join('')}
+                //                 </div>
+                //             </div>
+                //         </div>
+                //     `;
+
+                //     document.getElementById('systemMonitorContent').innerHTML = html;
+                // }
+
+                // function updateSystemStatsSmooth(data) {
+                //     // Update CPU Overall
+                //     const cpuValue = parseFloat(document.getElementById('cpuOverallValue').textContent);
+                //     const cpuTarget = data.cpu.overall;
+                //     animateValue('cpuOverallValue', cpuValue, cpuTarget, '%', 300);
+                //     animateBar('cpuOverallBar', cpuTarget, 300);
+
+                //     // Update Memory
+                //     const memValue = parseFloat(document.getElementById('memoryValue').textContent);
+                //     animateValue('memoryValue', memValue, data.memory.percent, '%', 300);
+                //     animateBar('memoryBar', data.memory.percent, 300);
+                //     document.getElementById('memoryDetail').textContent = 
+                //         `${(data.memory.used / (1024**3)).toFixed(1)} GB / ${(data.memory.total / (1024**3)).toFixed(1)} GB`;
+
+                //     // Update Disk
+                //     const diskValue = parseFloat(document.getElementById('diskValue').textContent);
+                //     animateValue('diskValue', diskValue, data.disk.percent, '%', 300);
+                //     animateBar('diskBar', data.disk.percent, 300);
+                //     document.getElementById('diskDetail').textContent = 
+                //         `${(data.disk.used / (1024**3)).toFixed(1)} GB / ${(data.disk.total / (1024**3)).toFixed(1)} GB`;
+
+                //     // Update Processes
+                //     const processValue = parseInt(document.getElementById('processesValue').textContent);
+                //     if (processValue !== data.processes) {
+                //         document.getElementById('processesValue').textContent = data.processes;
+                //     }
+
+                //     // Update CPU Per Core
+                //     data.cpu.per_core.forEach((usage, index) => {
+                //         const coreValue = parseFloat(document.getElementById(`core-${index}-value`).textContent);
+                //         animateValue(`core-${index}-value`, coreValue, usage, '%', 300);
+                //         animateBar(`core-${index}-bar`, usage, 300);
+                //     });
+                // }
+
+                // function animateValue(elementId, from, to, suffix, duration) {
+                //     const element = document.getElementById(elementId);
+                //     const startTime = Date.now();
+                    
+                //     function update() {
+                //         const elapsed = Date.now() - startTime;
+                //         const progress = Math.min(elapsed / duration, 1);
+                //         const current = from + (to - from) * progress;
+                //         element.textContent = current.toFixed(1) + suffix;
+                        
+                //         if (progress < 1) {
+                //             requestAnimationFrame(update);
+                //         }
+                //     }
+                    
+                //     requestAnimationFrame(update);
+                // }
+
+                // function animateBar(elementId, to, duration) {
+                //     const element = document.getElementById(elementId);
+                //     const from = parseFloat(element.style.width);
+                //     const startTime = Date.now();
+                    
+                //     function update() {
+                //         const elapsed = Date.now() - startTime;
+                //         const progress = Math.min(elapsed / duration, 1);
+                //         const current = from + (to - from) * progress;
+                //         element.style.width = current + '%';
+                        
+                //         if (progress < 1) {
+                //             requestAnimationFrame(update);
+                //         }
+                //     }
+                    
+                //     requestAnimationFrame(update);
+                // }
+
+                // function initCpuChart() {
+                //     const ctx = document.getElementById('cpuChart');
+                //     if (!ctx) return;
+
+                //     if (cpuChart) {
+                //         cpuChart.destroy();
+                //     }
+
+                //     const coreColors = [
+                //         'rgb(239, 68, 68)',      // red
+                //         'rgb(59, 130, 246)',     // blue
+                //         'rgb(34, 197, 94)',      // green
+                //         'rgb(202, 138, 4)',      // yellow
+                //         'rgb(147, 51, 234)',     // purple
+                //         'rgb(236, 72, 153)',     // pink
+                //         'rgb(99, 102, 241)',     // indigo
+                //         'rgb(6, 182, 212)',      // cyan
+                //     ];
+
+                //     const datasets = [
+                //         {
+                //             label: 'CPU Overall',
+                //             data: cpuDataPoints,
+                //             borderColor: 'rgb(0, 0, 0)',
+                //             backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                //             borderWidth: 3,
+                //             fill: true,
+                //             tension: 0.4,
+                //             pointRadius: 3,
+                //             pointBackgroundColor: 'rgb(0, 0, 0)',
+                //             pointBorderColor: '#fff',
+                //             pointBorderWidth: 2,
+                //         }
+                //     ];
+
+                //     // เพิ่ม dataset สำหรับแต่ละ core
+                //     cpuCoreDataPoints.forEach((coreData, index) => {
+                //         const color = coreColors[index % coreColors.length];
+                //         datasets.push({
+                //             label: `Core ${index}`,
+                //             data: coreData,
+                //             borderColor: color,
+                //             backgroundColor: color + '15', // 15% opacity
+                //             borderWidth: 1.5,
+                //             fill: false,
+                //             tension: 0.4,
+                //             pointRadius: 1,
+                //             pointBackgroundColor: color,
+                //         });
+                //     });
+
+                //     cpuChart = new Chart(ctx, {
+                //         type: 'line',
+                //         data: {
+                //             labels: cpuLabels,
+                //             datasets: datasets
+                //         },
+                //         options: {
+                //             responsive: true,
+                //             maintainAspectRatio: true,
+                //             animation: {
+                //                 duration: 0
+                //             },
+                //             interaction: {
+                //                 mode: 'index',
+                //                 intersect: false,
+                //             },
+                //             plugins: {
+                //                 legend: {
+                //                     display: true,
+                //                     position: 'top',
+                //                     labels: {
+                //                         usePointStyle: true,
+                //                         padding: 10,
+                //                         font: {
+                //                             size: 11,
+                //                         }
+                //                     }
+                //                 },
+                //                 filler: {
+                //                     propagate: true
+                //                 }
+                //             },
+                //             scales: {
+                //                 y: {
+                //                     beginAtZero: true,
+                //                     max: 100,
+                //                     ticks: {
+                //                         callback: function(value) {
+                //                             return value + '%';
+                //                         }
+                //                     }
+                //                 }
+                //             }
+                //         }
+                //     });
+                // }
+
+                // // โหลดข้อมูลแรกและเริ่ม interval
+                // window.addEventListener('load', function() {
+                //     loadSystemStats();
+                //     setInterval(loadSystemStats, 1000); // Update ทุก 1 วินาที
+                // });
             </script>
+
+            <!-- Chart.js Library -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 {% endblock %}
