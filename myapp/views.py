@@ -26,7 +26,7 @@ from django.utils import timezone
 from datetime import datetime, time
 import psutil
 import json
-
+apiurl = "https://02fa-2403-6200-8822-70aa-bd24-139e-f954-bd8a.ngrok-free.app/"
 # ---------- UI Render Views ----------
 @login_required
 def dog_list(request):
@@ -130,7 +130,7 @@ def dog_detail(request, dog_id):
             # 🔗 Call Embedding API เฉพาะรูปที่เปลี่ยน
             # ===============================
             if images_for_embedding:
-                url = "https://3f03a05d7b85.ngrok-free.app/embedding-image/"
+                url = apiurl+"embedding-image/"
 
                 files = []
                 for img in images_for_embedding:
@@ -249,7 +249,7 @@ def register_dog_page(request):
             formset.instance = dog
             formset.save()
             dog_images = DogImage.objects.filter(dog=dog)
-            url = "http://localhost:8001/embedding-image/"
+            url = apiurl+"embedding-image/"
 
             files = []
             for img in dog_images:
@@ -427,9 +427,12 @@ def dog_all_list(request):
 @login_required
 def home(request):
     role = request.user.role
-    if request.user.is_staff:
-        return render(request, 'myapp/admin_backend/admin_home.html')
-    elif role == 'org_admin':
+    print(request.user.is_staff,role)
+    # if request.user.is_staff:
+    #     print("admin")
+    #     return render(request, 'myapp/admin_backend/admin_home.html')
+    if role == 'org_admin':
+        print("org_admin")
         context = {
             'dogs_org': Dog.objects.filter(organization=True),
             'dogs_org_count': Dog.objects.filter(organization=True).count(),
@@ -728,46 +731,69 @@ def lost_dogs_map_data(request):
 
 @login_required
 def matchdog(request):
+    # Toggle Exam Mode here (True = Testing with random dogs, False = Real API)
+    IS_EXAM_MODE = False  
+
     if request.method == 'POST' and request.FILES.get('image'):
         image_file = request.FILES.get('image')
+        search_results = []
         
-        # 1. ส่งรูปไปยัง API
-        api_url = "http://localhost:8001/SEARCH-DOG02/" 
-        
-        try:
-            files = {'file': (image_file.name, image_file.read(), image_file.content_type)}
-            response = requests.post(api_url, files=files, timeout=30) # เพิ่ม timeout เพราะ AI อาจใช้เวลา
-            response.raise_for_status()
+        if IS_EXAM_MODE:
+            # --- Exam Mode: Random 5 dogs ---
+            # ดึงสุนัขแบบสุ่มมา 5 ตัว
+            random_dogs = list(Dog.objects.order_by('?')[:5])
             
-            # 2. รับผลลัพธ์ {"results": [{"rank": 1, "dog_id": "...", "distance": ...}, ...]}
-            api_response = response.json()
-            api_results = api_response.get('results', [])
-
-            search_results = []
-            for item in api_results:
-                filename_from_api = item['dog_id'] # ในกรณีนี้คือเลข 27
+            # กำหนดคะแนนสมมติ (เรียงจากมากไปน้อย)
+            dummy_scores = [98, 95, 92, 88, 85]
+            
+            for i, dog in enumerate(random_dogs):
+                # ป้องกันกรณีสุนัขไม่พอ 5 ตัว
+                if i < len(dummy_scores):
+                    dog.similarity_score = dummy_scores[i]
+                else:
+                    dog.similarity_score = 80 # default ถ้าเกิน
+                search_results.append(dog)
                 
-                try:
-                    # เปลี่ยนมาใช้ id=filename_from_api แทน
-                    dog = Dog.objects.filter(id=filename_from_api).first()
+            print("⚠️ Running in EXAM MODE: Returned 5 random dogs.")
+            
+        else:
+            # --- Real Mode: Call API ---
+            # 1. ส่งรูปไปยัง API
+            api_url = apiurl+"SEARCH-DOG02/"
+            
+            try:
+                files = {'file': (image_file.name, image_file.read(), image_file.content_type)}
+                response = requests.post(api_url, files=files, timeout=30) # เพิ่ม timeout เพราะ AI อาจใช้เวลา
+                response.raise_for_status()
+                
+                # 2. รับผลลัพธ์ {"results": [{"rank": 1, "dog_id": "...", "distance": ...}, ...]}
+                api_response = response.json()
+                api_results = api_response.get('results', [])
+                print(api_results)
+                
+                for item in api_results:
+                    filename_from_api = item['dog_id'] # ในกรณีนี้คือเลข 27
                     
-                    if dog:
-                        dog.distance = round(item['distance'], 4)
-                        # คำนวณ Score จาก Distance (ถ้า distance น้อย score จะสูง)
-                        dog.similarity_score = max(0, 100 - int(item['distance'] * 10)) 
+                    try:
+                        # เปลี่ยนมาใช้ id=filename_from_api แทน
+                        dog = Dog.objects.filter(id=filename_from_api).first()
                         
-                        search_results.append(dog)
-                    else:
-                        print(f"Dog ID {filename_from_api} not found in database.")
+                        if dog:
+                            dog.distance = round(item['distance'], 4)
+                            # คำนวณ Score จาก Distance (ถ้า distance น้อย score จะสูง)
+                            dog.similarity_score = max(0, 100 - int(item['distance'] * 10)) 
+                            
+                            search_results.append(dog)
+                        else:
+                            print(f"Dog ID {filename_from_api} not found in database.")
 
-                except Exception as e:
-                    print(f"Error fetching dog {filename_from_api}: {e}")
-                    continue
+                    except Exception as e:
+                        print(f"Error fetching dog {filename_from_api}: {e}")
+                        continue
 
-        except requests.exceptions.RequestException as e:
-            print(f"API Connection Error: {e}")
-            search_results = []
-
+            except requests.exceptions.RequestException as e:
+                print(f"API Connection Error: {e}")
+                
         context = {
             'search_results': search_results,
             'is_result': True,
@@ -832,18 +858,83 @@ def get_cpu_stats(request):
 #         messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้')
 #         return redirect('home')
 #     return render(request, 'admin/index.html')
-def admin_page(request):
-    # ดึงผลการทดสอบล่าสุด
-    latest_result = KNNTrainingResult.objects.order_by('-created_at').first()
+# def admin_page(request):
+#     # ดึงผลการทดสอบล่าสุด
+#     latest_result = KNNTrainingResult.objects.order_by('-created_at').first()
     
-    # ดึงประวัติการทดสอบทั้งหมด (เรียงตามเวลาล่าสุดก่อน)
+#     # ดึงประวัติการทดสอบทั้งหมด (เรียงตามเวลาล่าสุดก่อน)
+#     test_history = KNNTrainingResult.objects.order_by('-created_at')[:20]
+    
+#     context = {
+#         'latest_result': latest_result,
+#         'test_history': test_history,
+#     }
+#     return render(request, 'admin/dashdoardAI/dashdoard.html', context)
+# @staff_member_required
+def admin_page(request):
+    
+    # 1. AI & Training Data
+    latest_result = KNNTrainingResult.objects.order_by('-created_at').first()
     test_history = KNNTrainingResult.objects.order_by('-created_at')[:20]
     
+    # 2. CRUD Data
+    users = User.objects.all().order_by('-date_joined')
+    dogs = Dog.objects.all().order_by('-id')
+    notifications = Notification.objects.all().order_by('-created_at')
+
     context = {
         'latest_result': latest_result,
         'test_history': test_history,
+        'users': users,
+        'dogs': dogs,
+        'notifications': notifications,
+        'role_choices': User.ROLE_CHOICES, # For role editing
     }
     return render(request, 'admin/dashdoardAI/dashdoard.html', context)
+
+def admin_update_user_role(request, user_id):
+    
+    if request.method == 'POST':
+        user_to_edit = get_object_or_404(User, pk=user_id)
+        new_role = request.POST.get('role')
+        
+        # Prevent changing own role or superuser role casually
+        if user_to_edit == request.user:
+             messages.error(request, "ไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้")
+        elif new_role in dict(User.ROLE_CHOICES):
+            user_to_edit.role = new_role
+            user_to_edit.save()
+            messages.success(request, f"อัปเดตสิทธิ์ของ {user_to_edit.username} เป็น {user_to_edit.get_role_display()} เรียบร้อย")
+        else:
+             messages.error(request, "บทบาทไม่ถูกต้อง")
+             
+    return redirect('admin_page')
+
+def admin_delete_user(request, user_id):
+        
+    if request.method == 'POST':
+        user_to_delete = get_object_or_404(User, pk=user_id)
+        
+        if user_to_delete == request.user:
+             messages.error(request, "ไม่สามารถลบบัญชีตัวเองได้")
+        elif user_to_delete.is_superuser:
+             messages.error(request, "ไม่สามารถลบ Superuser ได้")
+        else:
+            username = user_to_delete.username
+            user_to_delete.delete()
+            messages.success(request, f"ลบผู้ใช้ {username} เรียบร้อยแล้ว")
+            
+    return redirect('admin_page')
+
+def admin_delete_dog(request, dog_id):
+        
+    if request.method == 'POST':
+        dog = get_object_or_404(Dog, pk=dog_id)
+        dog_name = dog.name
+        dog.delete()
+        messages.success(request, f"ลบสุนัข {dog_name} เรียบร้อยแล้ว")
+            
+    return redirect('admin_page')
 
 from .serverFast import trainKNN
 
@@ -985,7 +1076,7 @@ def train_knn_view(request):
         # เพิ่ม timeout เผื่อกรณี t-SNE ใช้เวลาคำนวณนาน
         print(train_data)
         response = requests.post(
-            "http://127.0.0.1:8001/test-knn/",
+            apiurl+"test-knn/",
             json={"data": train_data},
             timeout=180 
         )

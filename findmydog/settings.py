@@ -137,8 +137,8 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "project_db_name",
-        "USER": "postgres",
+        "NAME": "mydb",
+        "USER": "admin",
         "PASSWORD": "1234",
         "HOST": "localhost",
         "PORT": "5432",

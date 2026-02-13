@@ -7,7 +7,7 @@ from .models import DogImage
 
 logger = logging.getLogger(__name__)
 
-FASTAPI_BASE_URL = "http://127.0.0.1:8001"
+FASTAPI_BASE_URL = "https://02fa-2403-6200-8822-70aa-bd24-139e-f954-bd8a.ngrok-free.app"
 TRAIN_ENDPOINT = "/tiger_knnTrain/"
 
 

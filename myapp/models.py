@@ -13,7 +13,7 @@ class User(AbstractUser):
     # Role ของ user
     ROLE_CHOICES = [
         ('user', 'สมาชิก'),
-        ('adoptive_parents', 'พ่อแม่บุญธรรม'),
+        # ('adoptive_parents', 'พ่อแม่บุญธรรม'),
         ('org_admin', 'แอดมินองค์กร'),
     ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user')
