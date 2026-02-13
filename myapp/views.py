@@ -1070,7 +1070,6 @@ def train_knn_view(request):
             {"status": "error", "message": "ไม่มี embedding ในระบบ"},
             status=400
         )
-
     try:
         # 2. ส่งข้อมูลไปยัง FastAPI
         # เพิ่ม timeout เผื่อกรณี t-SNE ใช้เวลาคำนวณนาน
