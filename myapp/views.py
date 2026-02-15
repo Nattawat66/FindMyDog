@@ -323,20 +323,22 @@ def register(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         password_confirm = request.POST.get('password_confirm')
-        
+        phone = request.POST.get('phone')
+        line_id = request.POST.get('line_id')
+
         # ตรวจสอบว่ารหัสผ่านตรงกันหรือไม่
         if password != password_confirm:
             messages.error(request, 'รหัสผ่านไม่ตรงกัน')
-            return render(request, 'myapp/registeruser.html')
+            return render(request, 'myapp/authen/registeruser.html')
         
         # ตรวจสอบว่ามี username หรือ email ซ้ำหรือไม่
         if User.objects.filter(username=username).exists():
             messages.error(request, 'ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว')
-            return render(request, 'myapp/registeruser.html')
+            return render(request, 'myapp/authen/registeruser.html')
         
         if email and User.objects.filter(email=email).exists():
             messages.error(request, 'อีเมลนี้มีอยู่ในระบบแล้ว')
-            return render(request, 'myapp/registeruser.html')
+            return render(request, 'myapp/authen/registeruser.html')
         
         # สร้างผู้ใช้ใหม่
         try:
@@ -345,6 +347,9 @@ def register(request):
                 email=email if email else '',
                 password=password
             )
+            user.phone = phone
+            user.line_id = line_id
+            user.save()
             # messages.success(request, 'สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ')
             return redirect('login')
         except Exception as e:
@@ -637,6 +642,22 @@ def user_profile_view(request):
     # ข้อมูลผู้ใช้ที่เข้าสู่ระบบจะอยู่ใน request.user
     user = request.user
     
+    # ตรวจสอบโหมดแก้ไข
+    is_edit_mode = request.GET.get('edit', 'false').lower() == 'true'
+
+    if request.method == 'POST' and is_edit_mode:
+        phone = request.POST.get('phone')
+        line_id = request.POST.get('line_id')
+        
+        # อัปเดตข้อมูล
+        user.phone = phone
+        user.line_id = line_id
+        user.save()
+        
+        messages.success(request, 'บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว')
+        return redirect('user_profile')
+
+    
     # ถ้าคุณมี choices/mapping สำหรับ role
     # เช่น ROLE_CHOICES = [('standard', 'ผู้ใช้ทั่วไป'), ('org_admin', 'ผู้ดูแลองค์กร')]
     # คุณอาจต้องสร้างฟังก์ชันใน Custom User Model เพื่อดึง Role Display 
@@ -646,6 +667,7 @@ def user_profile_view(request):
         'user': user,
         # สามารถเพิ่มข้อมูลอื่นๆ ที่ต้องการแสดงได้ที่นี่
         'profile_title': "ข้อมูลส่วนตัวของฉัน",
+        'is_edit_mode': is_edit_mode,
     }
     return render(request, 'myapp/user/profile.html', context)
 

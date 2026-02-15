@@ -28,6 +28,11 @@
             <p class="text-gray-500 mt-1">{{ user.email }}</p>
         </div>
         
+        {% if is_edit_mode %}
+        <form method="POST" action="{% url 'user_profile' %}?edit=true">
+            {% csrf_token %}
+        {% endif %}
+
         <div class="space-y-4">
             
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm">
@@ -38,6 +43,24 @@
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm">
                 <span class="font-semibold text-gray-700">อีเมล (Email)</span>
                 <span class="text-lg text-gray-800">{{ user.email }}</span>
+            </div>
+
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm">
+                <span class="font-semibold text-gray-700">เบอร์โทรศัพท์</span>
+                {% if is_edit_mode %}
+                    <input type="tel" name="phone" value="{{ user.phone|default:'' }}" class="input input-bordered w-full max-w-xs" placeholder="เบอร์โทรศัพท์" required />
+                {% else %}
+                    <span class="text-lg text-gray-800">{{ user.phone|default:"-" }}</span>
+                {% endif %}
+            </div>
+
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm">
+                <span class="font-semibold text-gray-700">Line ID</span>
+                {% if is_edit_mode %}
+                    <input type="text" name="line_id" value="{{ user.line_id|default:'' }}" class="input input-bordered w-full max-w-xs" placeholder="Line ID" />
+                {% else %}
+                    <span class="text-lg text-gray-800">{{ user.line_id|default:"-" }}</span>
+                {% endif %}
             </div>
             
             <div class="flex justify-between items-center p-4 bg-indigo-50 rounded-lg shadow-md">
@@ -54,11 +77,20 @@
             
         </div>
 
-        <div class="mt-8 text-center">
-            <a href="#" class="btn btn-outline btn-wide btn-primary">
-                แก้ไขข้อมูลส่วนตัว
-            </a>
+        <div class="mt-8 text-center space-x-2">
+            {% if is_edit_mode %}
+                <a href="{% url 'user_profile' %}" class="btn btn-outline btn-error">ยกเลิก</a>
+                <button type="submit" class="btn btn-primary text-white">บันทึกการเปลี่ยนแปลง</button>
+            {% else %}
+                <a href="?edit=true" class="btn btn-outline btn-wide btn-primary">
+                    แก้ไขข้อมูลส่วนตัว
+                </a>
+            {% endif %}
         </div>
+
+        {% if is_edit_mode %}
+        </form>
+        {% endif %}
         
     </div>
 
