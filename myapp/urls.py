@@ -2,6 +2,7 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from . import views
+from . import views_admin
 # from .views import debug_cache
 
 urlpatterns = [
@@ -10,10 +11,9 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path('logout/', LogoutView.as_view(), name='logout'),
     path("login/", views.login, name="login"),
-    path('admin_page/', views.admin_page, name='admin_page'),
-    path('admin_page/user/<int:user_id>/update_role/', views.admin_update_user_role, name='admin_update_user_role'),
-    path('admin_page/user/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
-    path('admin_page/dog/<int:dog_id>/delete/', views.admin_delete_dog, name='admin_delete_dog'),
+    path('admin_page/user/<int:user_id>/update_role/', views_admin.admin_update_user_role, name='admin_update_user_role'),
+    path('admin_page/user/<int:user_id>/delete/', views_admin.admin_delete_user, name='admin_delete_user'),
+    path('admin_page/dog/<int:dog_id>/delete/', views_admin.admin_delete_dog, name='admin_delete_dog'),
     
     path('dog/register/', views.register_dog_page, name='register_dog_page'),
     path('dogs/', views.dog_list, name='dog_list'),
@@ -48,26 +48,23 @@ urlpatterns = [
     path('matchdog/', views.matchdog, name='matchdog'),
 
     # URL สำหรับเกี่ยวกับจัดการ model-----------------------------------------------------------
-    path('SetautoTraining/', views.set_auto_training, name='set_auto_training'),
-    path('model/retrain/', views.set_time_auto_training, name='retrain_model'),
-    # path("debug/cache/", debug_cache),
+    path('admin_page/', views_admin.admin_page, name='admin_page'),
+    path('SetautoTraining/', views_admin.set_auto_training, name='set_auto_training'),
+    path('model/retrain/', views_admin.set_time_auto_training, name='retrain_model'),
+    path('dogs/<int:dog_id>/request_adoption/', views_admin.request_adoption_view, name='request_adoption'),
+    path('adoption_requests/', views_admin.adoption_request_list_view, name='adoption_request_list'),
+    path('adoption_requests/<int:request_id>/<str:action>/', views_admin.handle_adoption_request_view, name='handle_adoption_request'),
+    path('page/testEMBmodel/', views_admin.page_testEMBmodel, name='testEMBmodel'),
+    path('train-knn/', views_admin.train_knn_view, name='train_knn'),
+    path('history-knn/', views_admin.knn_test_history_view, name='history_knn'),
 
-    path('dogs/<int:dog_id>/request_adoption/', views.request_adoption_view, name='request_adoption'),
-    path('adoption_requests/', views.adoption_request_list_view, name='adoption_request_list'),
-    path('adoption_requests/<int:request_id>/<str:action>/', views.handle_adoption_request_view, name='handle_adoption_request'),
-    path('page/testEMBmodel/', views.page_testEMBmodel, name='testEMBmodel'),
-    path('test-performanch-model/', views.TestEmbModel),
-    path('train-knn/', views.train_knn_view, name='train_knn'),
-    path('history-knn/', views.knn_test_history_view, name='history_knn'),
-
-    path('page/select-model/', views.page_select_model, name='page_select_model'),
-    path('select-model/', views.select_model, name='select_model'),
+    path('page/select-model/', views_admin.page_select_model, name='page_select_model'),
     
-    path('page_testEMBmodel/', views.page_testEMBmodel, name='page_testEMBmodel'),
+    path('page_testEMBmodel/', views_admin.page_testEMBmodel, name='page_testEMBmodel'),
     
     # API endpoint for getting KNN result data
-    path('api/knn-result/<int:result_id>/', views.get_knn_result_api, name='get_knn_result_api'),
+    path('api/knn-result/<int:result_id>/', views_admin.get_knn_result_api, name='get_knn_result_api'),
     # API endpoint for CPU stats
-    path('api/cpu-stats/', views.get_cpu_stats, name='get_cpu_stats'),
+    path('api/cpu-stats/', views_admin.get_cpu_stats, name='get_cpu_stats'),
     # path('trainKNN/', views.trigger_train_knn, name='trainKNN')
 ]
