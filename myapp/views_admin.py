@@ -26,6 +26,7 @@ from django.utils import timezone
 from datetime import datetime, time
 import psutil
 import json
+from findmydog.settings import FASTAPI_BASE_URL
 apiurl = "http://127.0.0.1:8001/"
 #model managements  ------------------------------------------------------------------------
 

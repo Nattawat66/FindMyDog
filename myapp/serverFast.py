@@ -2,12 +2,13 @@ import requests
 import logging
 import base64
 
+from django.conf import settings
 from django.http import JsonResponse
 from .models import DogImage
 
 logger = logging.getLogger(__name__)
 
-FASTAPI_BASE_URL = "https://02fa-2403-6200-8822-70aa-bd24-139e-f954-bd8a.ngrok-free.app"
+FASTAPI_BASE_URL = settings.FASTAPI_BASE_URL
 TRAIN_ENDPOINT = "/tiger_knnTrain/"
 
 

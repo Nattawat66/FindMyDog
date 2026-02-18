@@ -26,7 +26,22 @@ from django.utils import timezone
 from datetime import datetime, time
 import psutil
 import json
-apiurl = "http://127.0.0.1:8001/"
+from django.conf import settings
+
+# ใช้ FASTAPI_BASE_URL จาก settings แทนการ hardcode
+apiurl = settings.FASTAPI_BASE_URL
+if not apiurl.endswith('/'):
+    apiurl += '/'
+
+from django.http import JsonResponse
+from django.utils import timezone
+
+def server_time(request):
+    now = timezone.localtime()
+    return JsonResponse({
+        "iso": now.isoformat()
+    })
+
 # ---------- UI Render Views ----------
 @login_required
 def dog_list(request):

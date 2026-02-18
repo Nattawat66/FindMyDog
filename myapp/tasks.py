@@ -42,7 +42,7 @@ def retrain_model():
         "Content-Type": "application/json"
     }
 
-    fastapi_url = "http://localhost:8001/retrain-model-face/"
+    fastapi_url = settings.FASTAPI_BASE_URL
     
     # 3. ส่ง POST request พร้อมข้อมูล training_data
     try:

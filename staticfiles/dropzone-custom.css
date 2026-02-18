@@ -1,0 +1,74 @@
+/* ปรับแต่ง Dropzone ให้เข้ากับ DaisyUI */
+.dropzone {
+  border: 2px dashed #3b82f6;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  min-height: 200px;
+  padding: 2rem;
+  cursor: pointer;
+  position: relative;
+}
+.dropzone.dz-drag-hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+.dropzone.dz-clickable {
+  cursor: pointer;
+}
+.dropzone.dz-clickable * {
+  cursor: pointer;
+}
+.dz-preview {
+  margin: 0.5rem;
+  display: inline-block;
+  position: relative;
+}
+.dz-preview .dz-image {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.dz-preview .dz-remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 10;
+}
+.dz-preview .dz-remove:hover {
+  background: #dc2626;
+}
+.dz-message {
+  text-align: center;
+  margin: 2rem 0;
+  pointer-events: none;
+}
+.dz-message p {
+  margin-bottom: 1rem;
+}
+.dz-message .dz-button {
+  background: #3b82f6;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  pointer-events: auto;
+}
+.dz-message .dz-button:hover {
+  background: #2563eb;
+}
+/* ซ่อน preview ของ Dropzone เอง เพราะเราจะใช้ preview ของเราเอง */
+.dz-preview {
+  display: none !important;
+}
+

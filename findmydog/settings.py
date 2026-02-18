@@ -19,14 +19,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file at project root (same level as manage.py)
 load_dotenv(BASE_DIR / ".env")
-
+FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL")
+AUTO_TRAIN_SECRET = os.getenv("AUTO_TRAIN_SECRET")
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-^eo&+zc8@%r*!22s)j7ttz18#=j*o(r7d()^g4-aor6l7cwk3d'
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -38,6 +39,7 @@ CSRF_TRUSTED_ORIGINS = [
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
+    "web",  # Docker service name
     ".ngrok-free.app",   # อนุญาตทุกซับโดเมนของ ngrok
 ]
 
@@ -65,16 +67,27 @@ INSTALLED_APPS = [
     # 'django_browser_reload',
     "django_crontab",
     'django_apscheduler',
+    'django_celery_beat'
 ]
 
-CRONJOBS = [
-    (
-        '*/1 * * * *',
-        # '0 2 * * *',  # ตี 2 ทุกวัน (แนะนำกว่ารันทุกนาที)
-        'myapp.serverFast.trainKNN',
-        '>> /home/jaruvitgitant/Documents/Project_findmydog/Webapp/FindMyDog/cron_debug.log 2>&1'
-    ),
-]
+
+# CRONJOBS = [
+#     (
+#         '*/1 * * * *',
+#         # '0 2 * * *',  # ตี 2 ทุกวัน (แนะนำกว่ารันทุกนาที)
+#         'myapp.serverFast.trainKNN',
+#         '>> /Users/macbookair/Documents/projects_dog/django/FindMyDog/findmydog/cron_debug.log 2>&1'
+#     ),
+# ]
+
+#CRONJOBS = [
+#    (
+#        '*/1 * * * *',
+#        'myapp.serverFast.trainKNN',
+#        '>> /tmp/cron_debug.log 2>&1'  
+#    ),
+#]
+
 
 AUTO_TRAIN_SECRET = os.getenv("AUTO_TRAIN_SECRET")
 
@@ -89,6 +102,7 @@ AUTH_USER_MODEL = "myapp.User"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # เพิ่ม WhiteNoise สำหรับ serve static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -134,16 +148,30 @@ WSGI_APPLICATION = 'findmydog.wsgi.application'
 #     )
 # }
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("POSTGRES_DB", "mydb"),
+#         "USER": os.getenv("POSTGRES_USER", "admin"),
+#         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "1234"),
+#         "HOST": os.getenv("DB_HOST", "localhost"),
+#         "PORT": os.getenv("DB_PORT", "5432"),
+#     }
+# }
+import os
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "mydb",
-        "USER": "admin",
-        "PASSWORD": "1234",
-        "HOST": "localhost",
-        "PORT": "5432",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        "NAME": os.environ.get("DB_NAME"),
+        "USER": os.environ.get("DB_USER"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
+        "HOST": os.environ.get("DB_HOST"),
+        "PORT": os.environ.get("DB_PORT")
     }
 }
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -179,10 +207,22 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    # ลบ BASE_DIR / "static" ออกเพราะไม่มี directory นี้
+    # static files อยู่ใน myapp/static/ แล้ว
 ]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# WhiteNoise configuration สำหรับ serve static files ใน production
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
