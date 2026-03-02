@@ -2,11 +2,82 @@
 
 from django import forms
 from django.db.models import Q
-from .models import Dog, DogImage,Notification
+from .models import Dog, DogImage,Notification,User
+from django.contrib.auth import authenticate
+from django.core.exceptions import ValidationError
+
+
+class UserRegisterForm(forms.Form):
+    username = forms.CharField(max_length=150)
+    email = forms.EmailField(required=False)
+    password = forms.CharField(widget=forms.PasswordInput)
+    password_confirm = forms.CharField(widget=forms.PasswordInput)
+    phone = forms.CharField(required=False)
+    line_id = forms.CharField(required=False)
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        if User.objects.filter(username=username).exists():
+            raise ValidationError("ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exists():
+            raise ValidationError("อีเมลนี้มีอยู่ในระบบแล้ว")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_confirm = cleaned_data.get("password_confirm")
+
+        if password and password_confirm and password != password_confirm:
+            raise ValidationError("รหัสผ่านไม่ตรงกัน")
+
+        return cleaned_data
+
+    def save(self):
+        user = User.objects.create_user(
+            username=self.cleaned_data['username'],
+            email=self.cleaned_data.get('email', ''),
+            password=self.cleaned_data['password']
+        )
+        user.phone = self.cleaned_data.get('phone')
+        user.line_id = self.cleaned_data.get('line_id')
+        user.save()
+        return user
 
 
 
+class LoginForm(forms.Form):
+    username = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        username = cleaned_data.get("username")
+        password = cleaned_data.get("password")
+
+        if not username or not password:
+            raise ValidationError("กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน")
+
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            raise ValidationError("ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง")
+
+        if not user.is_active:
+            raise ValidationError("บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน")
+
+        self.user = user
+        return cleaned_data
+
+    def get_user(self):
+        return self.user
+    
 # --- 1. Form สำหรับข้อมูลสุนัข ---
+
 class DogForm(forms.ModelForm):
         
     ISLOST_CHOICES = [

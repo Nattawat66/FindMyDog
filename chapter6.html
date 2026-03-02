@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>State Table Testing – FindMyDog</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;color:#1a202c;padding:24px;}
+    h1{text-align:center;font-size:1.75rem;margin-bottom:4px;color:#2d3748;}
+    .subtitle{text-align:center;color:#718096;margin-bottom:28px;font-size:.9rem;}
+    .print-btn{display:block;width:fit-content;margin:0 auto 28px;padding:9px 26px;background:#2b6cb0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;}
+    .print-btn:hover{background:#2c5282;}
+
+    /* USE CASE BLOCK */
+    .uc-block{background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:48px;overflow:hidden;}
+    .uc-header{padding:14px 22px;font-size:1.05rem;font-weight:700;color:#fff;}
+    .bg1{background:linear-gradient(135deg,#3182ce,#63b3ed);}
+    .bg2{background:linear-gradient(135deg,#dd6b20,#f6ad55);}
+    .bg3{background:linear-gradient(135deg,#38a169,#68d391);}
+    .uc-body{padding:20px 22px;}
+
+    /* SECTION TITLE */
+    .sec-title{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#718096;margin:18px 0 8px;}
+    .sec-title:first-child{margin-top:0;}
+
+    /* STATES LIST */
+    .states-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;}
+    .state-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:.82rem;font-weight:600;border:2px solid;}
+    .sc-grey  {background:#edf2f7;border-color:#cbd5e0;color:#4a5568;}
+    .sc-blue  {background:#ebf8ff;border-color:#90cdf4;color:#2b6cb0;}
+    .sc-green {background:#f0fff4;border-color:#9ae6b4;color:#276749;}
+    .sc-red   {background:#fff5f5;border-color:#feb2b2;color:#c53030;}
+    .sc-orange{background:#fffaf0;border-color:#fbd38d;color:#c05621;}
+    .sc-purple{background:#faf5ff;border-color:#d6bcfa;color:#553c9a;}
+
+    /* STATE TRANSITION TABLE */
+    .stt-wrap{overflow-x:auto;margin-bottom:4px;}
+    table.stt{width:100%;border-collapse:collapse;font-size:.82rem;min-width:560px;}
+    table.stt th{padding:9px 12px;text-align:center;font-weight:700;background:#2d3748;color:#fff;border:1px solid #4a5568;}
+    table.stt th.row-h{background:#4a5568;text-align:left;min-width:160px;}
+    table.stt td{padding:9px 12px;border:1px solid #e2e8f0;text-align:center;vertical-align:middle;}
+    table.stt td.state-col{text-align:left;background:#edf2f7;font-weight:600;font-size:.8rem;color:#2d3748;border-right:2px solid #cbd5e0;}
+    .next-state{display:inline-block;padding:3px 10px;border-radius:6px;font-weight:600;font-size:.78rem;}
+    .ns-same   {background:#e2e8f0;color:#4a5568;}
+    .ns-blue   {background:#bee3f8;color:#1a365d;}
+    .ns-green  {background:#c6f6d5;color:#22543d;}
+    .ns-red    {background:#fed7d7;color:#742a2a;}
+    .ns-orange {background:#feebc8;color:#7b341e;}
+    .ns-purple {background:#e9d8fd;color:#44337a;}
+    .invalid   {color:#e53e3e;font-weight:800;font-size:1rem;}
+    .note-sm   {font-size:.72rem;color:#718096;margin-top:2px;}
+
+    /* TEST CASES TABLE */
+    table.tc{width:100%;border-collapse:collapse;font-size:.8rem;}
+    table.tc th{padding:9px 12px;text-align:left;background:#2d3748;color:#fff;border:1px solid #4a5568;}
+    table.tc td{padding:8px 12px;border:1px solid #e2e8f0;vertical-align:top;line-height:1.55;}
+    table.tc tr:nth-child(even) td{background:#f7fafc;}
+    .pass{color:#276749;font-weight:700;}
+    .fail-exp{color:#c53030;font-weight:700;}
+    .badge-state{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.75rem;font-weight:600;}
+    .bs-grey  {background:#e2e8f0;color:#4a5568;}
+    .bs-green {background:#c6f6d5;color:#22543d;}
+    .bs-red   {background:#fed7d7;color:#742a2a;}
+    .bs-orange{background:#feebc8;color:#7b341e;}
+    .bs-blue  {background:#bee3f8;color:#1a365d;}
+    .bs-purple{background:#e9d8fd;color:#44337a;}
+
+    @media print{.print-btn{display:none;}body{background:#fff;padding:0;}}
+  </style>
+</head>
+<body>
+
+<h1>State Table Testing – ระบบ FindMyDog</h1>
+<p class="subtitle">UC-01 คำขออุปการะสุนัข &nbsp;|&nbsp; UC-02 สถานะสุนัขหาย &nbsp;|&nbsp; UC-03 ระบบเข้าสู่ระบบ</p>
+<button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / Export PDF</button>
+
+
+<!-- ══════════════════════════════════════════════════════
+     UC-01  AdoptionRequest
+     ══════════════════════════════════════════════════════ -->
+<div class="uc-block">
+  <div class="uc-header bg1">UC-01 : คำขออุปการะสุนัข (Adoption Request Workflow)</div>
+  <div class="uc-body">
+
+    <!-- STEP 1 : States -->
+    <div class="sec-title">▶ Step 1 – States ทั้งหมดของ Use Case</div>
+    <div class="states-list">
+      <span class="state-chip sc-grey">S0 : ยังไม่มีคำขอ (No Request)</span>
+      <span class="state-chip sc-orange">S1 : รอพิจารณา (Pending)</span>
+      <span class="state-chip sc-green">S2 : อนุมัติแล้ว (Approved)</span>
+      <span class="state-chip sc-red">S3 : ปฏิเสธแล้ว (Rejected)</span>
+    </div>
+
+    <!-- STEP 2 : State Transition Table -->
+    <div class="sec-title">▶ Step 2 – State Transition Table</div>
+    <p style="font-size:.78rem;color:#718096;margin-bottom:8px;">
+      ✅ = Transition ที่ถูกต้อง &nbsp;|&nbsp; ❌ = Invalid Transition (ห้ามเกิดขึ้น ถ้าระบบยอมให้ทำถือว่า Bug)
+    </p>
+    <div class="stt-wrap">
+      <table class="stt">
+        <thead>
+          <tr>
+            <th class="row-h">สถานะเริ่มต้น (Current State)</th>
+            <th>Input: ส่งคำขอ<br/>(Submit)</th>
+            <th>Input: แก้ไขคำขอ<br/>(Edit)</th>
+            <th>Input: อนุมัติ<br/>(Approve)</th>
+            <th>Input: ปฏิเสธ<br/>(Reject)</th>
+            <th>Input: ยกเลิก<br/>(Cancel)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-col">S0 : ยังไม่มีคำขอ</td>
+            <td><span class="next-state ns-orange">→ S1 Pending</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีคำขอให้แก้ไข</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีคำขอ</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีคำขอ</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีคำขอ</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S1 : รอพิจารณา (Pending)</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ส่งซ้ำไม่ได้</span></td>
+            <td><span class="next-state ns-orange">→ S1 Pending</span><br/><span class="note-sm">(แก้ไขแล้วยังรอ)</span></td>
+            <td><span class="next-state ns-green">→ S2 Approved</span></td>
+            <td><span class="next-state ns-red">→ S3 Rejected</span></td>
+            <td><span class="next-state ns-same">→ S0 ไม่มีคำขอ</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S2 : อนุมัติแล้ว (Approved)</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ส่งซ้ำไม่ได้</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">อนุมัติแล้ว แก้ไม่ได้</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">อนุมัติแล้ว</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">อนุมัติแล้ว</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ยกเลิกไม่ได้</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S3 : ปฏิเสธแล้ว (Rejected)</td>
+            <td><span class="next-state ns-orange">→ S1 Pending</span><br/><span class="note-sm">(ส่งใหม่ได้)</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ถูกปฏิเสธแล้ว</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ต้องส่งคำขอใหม่</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ถูกปฏิเสธแล้ว</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีสิ่งให้ยกเลิก</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- STEP 3 : Test Cases -->
+    <div class="sec-title">▶ Step 3 – Test Cases</div>
+    <table class="tc">
+      <thead>
+        <tr>
+          <th>Test Case ID</th>
+          <th>Current State</th>
+          <th>Input / Action</th>
+          <th>เงื่อนไข (Precondition)</th>
+          <th>Next State ที่คาดหวัง</th>
+          <th>Expected Output</th>
+          <th>ประเภท</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>TC-AR-01</td>
+          <td><span class="badge-state bs-grey">S0 No Request</span></td>
+          <td>User กด "ขออุปการะ" และส่งฟอร์ม</td>
+          <td>User login, dog.organization=True, ฟอร์มถูกต้อง</td>
+          <td><span class="badge-state bs-orange">S1 Pending</span></td>
+          <td>สร้าง AdoptionRequest, status='PENDING', แสดงข้อความสำเร็จ</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-AR-02</td>
+          <td><span class="badge-state bs-orange">S1 Pending</span></td>
+          <td>org_admin กด "อนุมัติ" (Approve)</td>
+          <td>request.user เป็น org_admin หรือ is_staff=True</td>
+          <td><span class="badge-state bs-green">S2 Approved</span></td>
+          <td>status='APPROVED', สร้าง AdoptionParent, ส่ง Notification แจ้งผู้ขอ</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-AR-03</td>
+          <td><span class="badge-state bs-orange">S1 Pending</span></td>
+          <td>org_admin กด "ปฏิเสธ" (Reject) พร้อมระบุเหตุผล</td>
+          <td>request.user เป็น org_admin หรือ is_staff=True</td>
+          <td><span class="badge-state bs-red">S3 Rejected</span></td>
+          <td>status='REJECTED', บันทึก admin_feedback</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-AR-04</td>
+          <td><span class="badge-state bs-orange">S1 Pending</span></td>
+          <td>User กด "ยกเลิกคำขอ" (Cancel)</td>
+          <td>User เป็นเจ้าของคำขอ</td>
+          <td><span class="badge-state bs-grey">S0 No Request</span></td>
+          <td>ลบ AdoptionRequest, กลับสู่สถานะไม่มีคำขอ</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-AR-05</td>
+          <td><span class="badge-state bs-red">S3 Rejected</span></td>
+          <td>User ส่งคำขออุปการะใหม่อีกครั้ง</td>
+          <td>สุนัขตัวเดิม, User เดิม</td>
+          <td><span class="badge-state bs-orange">S1 Pending</span></td>
+          <td>สร้าง AdoptionRequest ใหม่, status='PENDING'</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-AR-06</td>
+          <td><span class="badge-state bs-grey">S0 No Request</span></td>
+          <td>User พยายาม Approve โดยตรง (ไม่ได้ส่งคำขอก่อน)</td>
+          <td>ไม่มี AdoptionRequest อยู่ในระบบ</td>
+          <td><span class="badge-state bs-grey">S0 No Request</span></td>
+          <td>ระบบไม่อนุญาต (404 หรือ error) – ❌ Invalid Transition ต้องป้องกัน</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+        <tr>
+          <td>TC-AR-07</td>
+          <td><span class="badge-state bs-green">S2 Approved</span></td>
+          <td>User พยายามส่งคำขอสุนัขตัวเดิมซ้ำ</td>
+          <td>AdoptionParent record มีอยู่แล้ว (unique_together)</td>
+          <td><span class="badge-state bs-green">S2 Approved</span></td>
+          <td>ระบบแสดง error / Database constraint – ❌ Invalid Transition</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+        <tr>
+          <td>TC-AR-08</td>
+          <td><span class="badge-state bs-orange">S1 Pending</span></td>
+          <td>User ทั่วไปพยายาม Approve คำขอของตัวเอง</td>
+          <td>request.user เป็น 'user' (ไม่ใช่ org_admin)</td>
+          <td><span class="badge-state bs-orange">S1 Pending</span></td>
+          <td>ระบบ Permission Denied – ❌ Invalid Transition</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     UC-02  Dog is_lost Status
+     ══════════════════════════════════════════════════════ -->
+<div class="uc-block">
+  <div class="uc-header bg2">UC-02 : สถานะสุนัขสูญหาย (Dog Lost Status)</div>
+  <div class="uc-body">
+
+    <!-- STEP 1 -->
+    <div class="sec-title">▶ Step 1 – States ทั้งหมดของ Use Case</div>
+    <div class="states-list">
+      <span class="state-chip sc-grey">S0 : ยังไม่ลงทะเบียน (Not Registered)</span>
+      <span class="state-chip sc-green">S1 : ปกติ (Normal, is_lost=False)</span>
+      <span class="state-chip sc-red">S2 : สูญหาย (Lost, is_lost=True)</span>
+      <span class="state-chip sc-grey">S3 : ถูกลบ (Deleted)</span>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="sec-title">▶ Step 2 – State Transition Table</div>
+    <p style="font-size:.78rem;color:#718096;margin-bottom:8px;">
+      ✅ = Transition ที่ถูกต้อง &nbsp;|&nbsp; ❌ = Invalid Transition
+    </p>
+    <div class="stt-wrap">
+      <table class="stt">
+        <thead>
+          <tr>
+            <th class="row-h">สถานะเริ่มต้น (Current State)</th>
+            <th>Input: ลงทะเบียน<br/>(Register)</th>
+            <th>Input: แจ้งสูญหาย<br/>(Report Lost)</th>
+            <th>Input: ยกเลิกสูญหาย<br/>(Cancel Lost)</th>
+            <th>Input: ลบสุนัข<br/>(Delete)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-col">S0 : ยังไม่ลงทะเบียน</td>
+            <td><span class="next-state ns-green">→ S1 Normal</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีสุนัขในระบบ</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีสุนัขในระบบ</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีสุนัขในระบบ</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S1 : ปกติ (Normal)</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ลงทะเบียนซ้ำไม่ได้</span></td>
+            <td><span class="next-state ns-red">→ S2 Lost</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ยังไม่ได้แจ้งสูญหาย</span></td>
+            <td><span class="next-state ns-same">→ S3 Deleted</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S2 : สูญหาย (Lost)</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">มีข้อมูลอยู่แล้ว</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">แจ้งซ้ำไม่ได้</span></td>
+            <td><span class="next-state ns-green">→ S1 Normal</span></td>
+            <td><span class="next-state ns-same">→ S3 Deleted</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S3 : ถูกลบ (Deleted)</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่สามารถกู้คืนได้</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีข้อมูลในระบบ</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีข้อมูลในระบบ</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ถูกลบแล้ว</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="sec-title">▶ Step 3 – Test Cases</div>
+    <table class="tc">
+      <thead>
+        <tr>
+          <th>Test Case ID</th>
+          <th>Current State</th>
+          <th>Input / Action</th>
+          <th>เงื่อนไข (Precondition)</th>
+          <th>Next State ที่คาดหวัง</th>
+          <th>Expected Output</th>
+          <th>ประเภท</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>TC-DS-01</td>
+          <td><span class="badge-state bs-grey">S0 Not Registered</span></td>
+          <td>ลงทะเบียนสุนัข + อัปโหลดรูป (POST /registerdog/)</td>
+          <td>User login, ฟอร์มถูกต้อง, มีรูปอย่างน้อย 1 รูป</td>
+          <td><span class="badge-state bs-green">S1 Normal</span></td>
+          <td>สร้าง Dog object, เรียก embedding API, is_lost=False, Redirect dog_list</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-DS-02</td>
+          <td><span class="badge-state bs-green">S1 Normal</span></td>
+          <td>เจ้าของกด "แจ้งสูญหาย" + ปักหมุด (POST /report-lost/)</td>
+          <td>dog.owner == request.user, lat/lng ถูกต้อง</td>
+          <td><span class="badge-state bs-red">S2 Lost</span></td>
+          <td>is_lost=True, บันทึก lat/lng ลง DB, หมุดปรากฏบนแผนที่</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-DS-03</td>
+          <td><span class="badge-state bs-red">S2 Lost</span></td>
+          <td>เจ้าของแก้ไขข้อมูล ตั้ง is_lost=False (Edit &amp; Save)</td>
+          <td>can_edit=True, ฟอร์มถูกต้อง</td>
+          <td><span class="badge-state bs-green">S1 Normal</span></td>
+          <td>is_lost=False, lat/lng ถูก clear, หมุดหายออกจากแผนที่</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-DS-04</td>
+          <td><span class="badge-state bs-green">S1 Normal</span></td>
+          <td>เจ้าของยืนยันลบสุนัข (POST /delete/)</td>
+          <td>dog.owner == request.user</td>
+          <td><span class="badge-state bs-grey">S3 Deleted</span></td>
+          <td>ลบ Dog และ DogImages ออกจาก DB, Redirect dog_list</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-DS-05</td>
+          <td><span class="badge-state bs-green">S1 Normal</span></td>
+          <td>User อื่น (ไม่ใช่เจ้าของ) พยายาม แจ้งสูญหาย</td>
+          <td>dog.owner ≠ request.user, dog.organization ≠ request.user</td>
+          <td><span class="badge-state bs-green">S1 Normal</span></td>
+          <td>Error: "คุณไม่มีสิทธิ์ในการแจ้งสูญหาย", Redirect dog_detail – ❌ Invalid</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+        <tr>
+          <td>TC-DS-06</td>
+          <td><span class="badge-state bs-red">S2 Lost</span></td>
+          <td>เรียก API /lost-dogs-map-data/ เพื่อแสดงบนแผนที่</td>
+          <td>is_lost=True, lost_latitude และ lost_longitude ไม่เป็น null</td>
+          <td><span class="badge-state bs-red">S2 Lost</span></td>
+          <td>ส่งกลับ JSON {id, name, lat, lng, image_url, detail_url}</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-DS-07</td>
+          <td><span class="badge-state bs-red">S2 Lost</span></td>
+          <td>พยายามลงทะเบียนสุนัขตัวเดิมซ้ำ (Register Again)</td>
+          <td>Dog มีอยู่ใน DB แล้ว</td>
+          <td><span class="badge-state bs-red">S2 Lost</span></td>
+          <td>ระบบไม่อนุญาต – ❌ Invalid Transition</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     UC-03  User Login
+     ══════════════════════════════════════════════════════ -->
+<div class="uc-block">
+  <div class="uc-header bg3">UC-03 : ระบบเข้าสู่ระบบ (User Authentication)</div>
+  <div class="uc-body">
+
+    <!-- STEP 1 -->
+    <div class="sec-title">▶ Step 1 – States ทั้งหมดของ Use Case</div>
+    <div class="states-list">
+      <span class="state-chip sc-grey">S0 : ยังไม่มีบัญชี (No Account)</span>
+      <span class="state-chip sc-blue">S1 : ออฟไลน์ (Logged Out)</span>
+      <span class="state-chip sc-green">S2 : เข้าสู่ระบบ – User (Logged In)</span>
+      <span class="state-chip sc-purple">S3 : เข้าสู่ระบบ – Admin (Logged In Admin)</span>
+      <span class="state-chip sc-red">S4 : บัญชีถูกระงับ (Suspended)</span>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="sec-title">▶ Step 2 – State Transition Table</div>
+    <p style="font-size:.78rem;color:#718096;margin-bottom:8px;">
+      ✅ = Transition ที่ถูกต้อง &nbsp;|&nbsp; ❌ = Invalid Transition
+    </p>
+    <div class="stt-wrap">
+      <table class="stt">
+        <thead>
+          <tr>
+            <th class="row-h">สถานะเริ่มต้น (Current State)</th>
+            <th>Input: สมัครสมาชิก<br/>(Register)</th>
+            <th>Input: Login<br/>(User / Admin)</th>
+            <th>Input: Logout</th>
+            <th>Input: ระงับบัญชี<br/>(Suspend)</th>
+            <th>Input: เปิดใช้บัญชีคืน<br/>(Reactivate)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-col">S0 : ยังไม่มีบัญชี</td>
+            <td><span class="next-state ns-blue">→ S1 Logged Out</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีบัญชีในระบบ</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มี session</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีบัญชี</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่มีบัญชี</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S1 : ออฟไลน์ (Logged Out)</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">มีบัญชีแล้ว</span></td>
+            <td><span class="next-state ns-green">→ S2 Logged In</span><br/><span class="note-sm">หรือ → S3 Admin</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่ได้ Login อยู่</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ต้องทำโดย Admin</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ยังไม่ถูกระงับ</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S2 : เข้าสู่ระบบ – User</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">มีบัญชีแล้ว</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">Login ซ้ำไม่ได้</span></td>
+            <td><span class="next-state ns-blue">→ S1 Logged Out</span></td>
+            <td><span class="next-state ns-red">→ S4 Suspended</span><br/><span class="note-sm">(Admin ดำเนินการ)</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ยังไม่ถูกระงับ</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S3 : เข้าสู่ระบบ – Admin</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">มีบัญชีแล้ว</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">Login ซ้ำไม่ได้</span></td>
+            <td><span class="next-state ns-blue">→ S1 Logged Out</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">Admin ถูกระงับไม่ได้</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ยังไม่ถูกระงับ</span></td>
+          </tr>
+          <tr>
+            <td class="state-col">S4 : บัญชีถูกระงับ</td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">มีบัญชีแล้ว</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">บัญชีถูกระงับ</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ไม่ได้ Login อยู่</span></td>
+            <td><span class="invalid">❌</span><br/><span class="note-sm">ถูกระงับอยู่แล้ว</span></td>
+            <td><span class="next-state ns-blue">→ S1 Logged Out</span><br/><span class="note-sm">(Admin เปิดคืน)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="sec-title">▶ Step 3 – Test Cases</div>
+    <table class="tc">
+      <thead>
+        <tr>
+          <th>Test Case ID</th>
+          <th>Current State</th>
+          <th>Input / Action</th>
+          <th>เงื่อนไข (Precondition)</th>
+          <th>Next State ที่คาดหวัง</th>
+          <th>Expected Output</th>
+          <th>ประเภท</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>TC-UA-01</td>
+          <td><span class="badge-state bs-grey">S0 No Account</span></td>
+          <td>กรอกข้อมูลสมัครสมาชิกครบถ้วน</td>
+          <td>username ไม่ซ้ำ, email ไม่ซ้ำ, password ตรงกัน</td>
+          <td><span class="badge-state bs-blue">S1 Logged Out</span></td>
+          <td>สร้าง User ใหม่ role='user', Redirect หน้า Login</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-UA-02</td>
+          <td><span class="badge-state bs-blue">S1 Logged Out</span></td>
+          <td>Login ด้วย username/password ถูกต้อง (role='user')</td>
+          <td>is_active=True, role='user'</td>
+          <td><span class="badge-state bs-green">S2 Logged In User</span></td>
+          <td>สร้าง session, Redirect home.html (user dashboard)</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-UA-03</td>
+          <td><span class="badge-state bs-blue">S1 Logged Out</span></td>
+          <td>Login ด้วย username/password ถูกต้อง (is_staff=True)</td>
+          <td>is_staff=True</td>
+          <td><span class="badge-state bs-purple">S3 Logged In Admin</span></td>
+          <td>Redirect admin_page (Dashboard AI)</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-UA-04</td>
+          <td><span class="badge-state bs-green">S2 Logged In User</span></td>
+          <td>กด Logout</td>
+          <td>มี session อยู่</td>
+          <td><span class="badge-state bs-blue">S1 Logged Out</span></td>
+          <td>ลบ session, Redirect หน้า Login</td>
+          <td class="pass">✅ Valid</td>
+        </tr>
+        <tr>
+          <td>TC-UA-05</td>
+          <td><span class="badge-state bs-blue">S1 Logged Out</span></td>
+          <td>Login ด้วย password ผิด</td>
+          <td>Username ถูกต้อง, Password ผิด</td>
+          <td><span class="badge-state bs-blue">S1 Logged Out</span></td>
+          <td>Error: "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง" – ❌ Invalid Transition</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+        <tr>
+          <td>TC-UA-06</td>
+          <td><span class="badge-state bs-blue">S1 Logged Out</span></td>
+          <td>Login โดยไม่กรอกข้อมูล (ว่างเปล่า)</td>
+          <td>username='' หรือ password=''</td>
+          <td><span class="badge-state bs-blue">S1 Logged Out</span></td>
+          <td>Error: "กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน" – ❌ Invalid Transition</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+        <tr>
+          <td>TC-UA-07</td>
+          <td><span class="badge-state bs-red">S4 Suspended</span></td>
+          <td>บัญชีถูกระงับ พยายาม Login</td>
+          <td>is_active=False</td>
+          <td><span class="badge-state bs-red">S4 Suspended</span></td>
+          <td>Error: "บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน" – ❌ Invalid Transition</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+        <tr>
+          <td>TC-UA-08</td>
+          <td><span class="badge-state bs-grey">S0 No Account</span></td>
+          <td>สมัครสมาชิกด้วย username ที่ซ้ำในระบบ</td>
+          <td>User.objects.filter(username=...).exists()=True</td>
+          <td><span class="badge-state bs-grey">S0 No Account</span></td>
+          <td>Error: "ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว" – ❌ Invalid Transition</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+        <tr>
+          <td>TC-UA-09</td>
+          <td><span class="badge-state bs-grey">S0 No Account</span></td>
+          <td>สมัครสมาชิก password ไม่ตรงกัน</td>
+          <td>password ≠ password_confirm</td>
+          <td><span class="badge-state bs-grey">S0 No Account</span></td>
+          <td>Error: "รหัสผ่านไม่ตรงกัน" – ❌ Invalid Transition</td>
+          <td class="fail-exp">❌ Invalid</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<p style="text-align:center;color:#a0aec0;font-size:.78rem;margin-top:4px;padding-bottom:12px;">
+  FindMyDog – State Table Testing | ระบบค้นหาสุนัขด้วย AI
+</p>
+
+</body>
+</html>

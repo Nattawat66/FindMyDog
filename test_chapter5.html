@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<title>บทที่ 5 — การทดสอบระบบ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"TH Sarabun New","Sarabun",sans-serif;font-size:16pt;background:#f5f5f5;color:#111;padding:28px 40px}
+h1{font-size:20pt;font-weight:bold;margin-bottom:8px}
+h2{font-size:18pt;font-weight:bold;margin:28px 0 6px}
+h3{font-size:16pt;font-weight:bold;text-align:center;margin:18px 0 6px}
+p.intro{margin-bottom:14px;line-height:1.7}
+.wrap{margin:10px 0 32px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15pt;background:#fff}
+th{background:#2d6a4f;color:#fff;padding:9px 12px;border:1px solid #1b4332;text-align:center;font-weight:bold}
+td{padding:8px 12px;border:1px solid #aaa;vertical-align:top;line-height:1.6}
+tr:nth-child(even) td{background:#f0f7f4}
+td.gl{font-weight:bold;background:#e8f5e9;vertical-align:middle;text-align:center}
+.p{display:inline-block;padding:1px 9px;border-radius:10px;font-size:13pt;font-weight:bold;background:#d4edda;color:#155724}
+.f{display:inline-block;padding:1px 9px;border-radius:10px;font-size:13pt;font-weight:bold;background:#f8d7da;color:#721c24}
+hr{border:none;border-top:2px solid #ccc;margin:16px 0}
+@media print{body{background:#fff;padding:10px 20px}}
+</style>
+</head>
+<body>
+
+<h1>บทที่ 5 การทดสอบระบบ</h1>
+<p class="intro">
+บทนี้นำเสนอผลการทดสอบในส่วนต่าง ๆ ของระบบ FindMyDog ครอบคลุมทุกฟังก์ชันการทำงานหลัก
+ได้แก่ ระบบเข้าสู่ระบบ, สมัครสมาชิก, ลงทะเบียนและจัดการสุนัข (CRUD), ระบบข่าวสาร (CRUD),
+โปรไฟล์ผู้ใช้, แผนที่สุนัขสูญหาย, ระบบค้นหาสุนัขด้วย AI และระบบขออุปการะสุนัข
+โดยแสดงรายการทดสอบ เงื่อนไข และผลที่ได้รับในแต่ละกรณี
+</p>
+
+<h2>5.1 การทดสอบในส่วนของผู้ใช้ทั่วไป</h2>
+
+<!-- ===== 5.1 Login ===== -->
+<h3>ตารางที่ 5.1: ผลการทดสอบระบบเข้าสู่ระบบ (Login)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="7">ทดสอบการเข้าสู่ระบบ</td>
+    <td>ผู้ใช้เข้าหน้าเข้าสู่ระบบ (GET /login/)</td>
+    <td>ระบบแสดงฟอร์มเข้าสู่ระบบ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้กรอก Username และ Password ถูกต้อง แล้วกดเข้าสู่ระบบ</td>
+    <td>ระบบตรวจสอบผ่าน <code>authenticate()</code> แล้ว redirect ไปหน้า Home <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้กรอก Username หรือ Password ผิด แล้วกดเข้าสู่ระบบ</td>
+    <td>ระบบแสดง error "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง" <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ไม่กรอกข้อมูลและกดเข้าสู่ระบบ</td>
+    <td>ระบบแสดง error "กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน" <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ Admin (is_staff=True) กรอกถูกต้องและเข้าสู่ระบบ</td>
+    <td>ระบบ redirect ไปหน้า Admin Dashboard โดยตรง <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่บัญชีถูกระงับ (is_active=False) พยายามเข้าสู่ระบบ</td>
+    <td>ระบบแสดง error "บัญชีผู้ใช้งานนี้ถูกระงับการใช้งาน" <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ยังไม่ได้ Login พยายามเข้าหน้าที่ต้องการ Login เช่น /dog-list/</td>
+    <td>ระบบ redirect ไปหน้า Login พร้อม parameter <code>?next=</code> <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.2 Register ===== -->
+<h3>ตารางที่ 5.2: ผลการทดสอบระบบสมัครสมาชิก (Register)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="6">ทดสอบการสมัครสมาชิก</td>
+    <td>ผู้ใช้เข้าหน้าสมัครสมาชิก (GET /register/)</td>
+    <td>ระบบแสดงฟอร์มสมัครสมาชิก <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้กรอกข้อมูลครบถ้วนถูกต้อง (Username, Email, Password, Confirm, Phone, Line ID) และกดสมัคร</td>
+    <td>ระบบสร้างบัญชีใหม่และ redirect ไปหน้า Login <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้กรอก Password ทั้งสองช่องไม่ตรงกัน และกดสมัคร</td>
+    <td>ระบบแสดง error "รหัสผ่านไม่ตรงกัน" และไม่สร้างบัญชี <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้กรอก Username ที่มีอยู่แล้วในระบบ และกดสมัคร</td>
+    <td>ระบบแสดง error "ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว" <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้กรอก Email ที่มีอยู่แล้วในระบบ และกดสมัคร</td>
+    <td>ระบบแสดง error "อีเมลนี้มีอยู่ในระบบแล้ว" <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ไม่กรอก Email (ไม่บังคับ) แต่กรอกข้อมูลอื่นครบ และกดสมัคร</td>
+    <td>ระบบสร้างบัญชีโดยบันทึก Email เป็นค่าว่าง และ redirect ไปหน้า Login <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.3 Dog Create ===== -->
+<h3>ตารางที่ 5.3: ผลการทดสอบการลงทะเบียนสุนัข (Create)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="5">ทดสอบการลงทะเบียนสุนัข</td>
+    <td>ผู้ใช้ที่ Login แล้วเข้าหน้าลงทะเบียนสุนัข (GET /register-dog/)</td>
+    <td>ระบบแสดงฟอร์มลงทะเบียนสุนัขพร้อม FormSet รูปภาพ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้กรอกข้อมูลสุนัขครบถ้วนพร้อมแนบรูปภาพ และกดบันทึก</td>
+    <td>ระบบบันทึกสุนัข กำหนด owner เป็นผู้ใช้ปัจจุบัน ส่งรูปไป Embedding API แล้ว redirect ไปหน้ารายการสุนัข <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ไม่กรอกชื่อสุนัข (ช่องบังคับ) และกดบันทึก</td>
+    <td>ระบบแสดง error validation บนฟอร์มและไม่บันทึก <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ยังไม่ Login พยายามเข้าหน้าลงทะเบียนสุนัข</td>
+    <td>ระบบ redirect ไปหน้า Login <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่มีบทบาท Org Admin ลงทะเบียนสุนัข</td>
+    <td>ระบบใช้ฟอร์ม OrgAdminDogForm ที่มีตัวเลือกพิเศษ (เช่น ฟิลด์ organization) และบันทึกสำเร็จ <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.4 Dog Read ===== -->
+<h3>ตารางที่ 5.4: ผลการทดสอบการดูรายละเอียดสุนัข (Read)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="5">ทดสอบการดูรายละเอียดสุนัข</td>
+    <td>เจ้าของสุนัขเข้าหน้ารายละเอียดสุนัขของตน</td>
+    <td>ระบบแสดงข้อมูลสุนัขครบถ้วน พร้อมปุ่มแก้ไขและลบ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ทั่วไปที่ไม่ใช่เจ้าของเข้าดูรายละเอียดสุนัขของคนอื่น</td>
+    <td>ระบบแสดงข้อมูลสุนัขได้ แต่ไม่แสดงปุ่มแก้ไข/ลบ (can_edit=False) <span class="p">ผ่าน</span></td></tr>
+<tr><td>Admin (is_staff=True) เข้าดูรายละเอียดสุนัขของผู้ใช้คนอื่น</td>
+    <td>ระบบแสดงข้อมูลครบ และได้รับสิทธิ์แก้ไข (can_edit=True) <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้เรียก URL ที่ dog_id ไม่มีในระบบ เช่น /dogs/9999/</td>
+    <td>ระบบคืนหน้า 404 Not Found <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้เข้าหน้ารายการสุนัขทั้งหมด (Dog All List)</td>
+    <td>ระบบแสดงรายการสุนัขทั้งหมดพร้อมสถิติ (จำนวน, สูญหาย, องค์กร) <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.5 Dog Update ===== -->
+<h3>ตารางที่ 5.5: ผลการทดสอบการแก้ไขข้อมูลสุนัข (Update)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="5">ทดสอบการแก้ไขข้อมูลสุนัข</td>
+    <td>เจ้าของสุนัขเปิดโหมดแก้ไข (?edit=true) แก้ไขชื่อ และกดบันทึก</td>
+    <td>ระบบบันทึกข้อมูลที่แก้ไขและ redirect กลับหน้า dog_detail <span class="p">ผ่าน</span></td></tr>
+<tr><td>เจ้าของสุนัขเพิ่มรูปภาพใหม่ในโหมดแก้ไข และกดบันทึก</td>
+    <td>ระบบบันทึกรูปใหม่ ส่งไป Embedding API และอัปเดต embedding_binary <span class="p">ผ่าน</span></td></tr>
+<tr><td>เจ้าของสุนัขลบรูปภาพที่มีอยู่ในโหมดแก้ไข และกดบันทึก</td>
+    <td>ระบบลบรูปภาพออกจากฐานข้อมูล <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ไม่ใช่เจ้าของส่ง POST request เพื่อแก้ไขสุนัขของคนอื่น</td>
+    <td>ระบบแสดง error "คุณไม่มีสิทธิ์แก้ไขข้อมูลสุนัขตัวนี้" และ redirect กลับ <span class="p">ผ่าน</span></td></tr>
+<tr><td>เจ้าของแก้ไขข้อมูลโดยล้างชื่อสุนัขให้ว่าง และกดบันทึก</td>
+    <td>ระบบแสดง error validation และไม่บันทึกข้อมูล <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.6 Dog Delete ===== -->
+<h3>ตารางที่ 5.6: ผลการทดสอบการลบข้อมูลสุนัข (Delete)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="4">ทดสอบการลบสุนัข</td>
+    <td>เจ้าของสุนัขกดยืนยันการลบ (POST /dogs/&lt;id&gt;/delete/) สุนัขของตน</td>
+    <td>ระบบลบสุนัขออกจากฐานข้อมูลและ redirect ไปหน้ารายการสุนัข <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ไม่ใช่เจ้าของส่ง POST request เพื่อลบสุนัขของคนอื่น</td>
+    <td>ระบบคืน 404 Not Found เนื่องจาก get_object_or_404 กรอง owner <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ส่ง GET request ไปที่ URL ลบสุนัข (ไม่ผ่าน Modal)</td>
+    <td>ระบบ redirect กลับหน้า dog_detail โดยไม่ลบข้อมูล <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ยังไม่ Login พยายามลบสุนัข</td>
+    <td>ระบบ redirect ไปหน้า Login <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.7 Dog List ===== -->
+<h3>ตารางที่ 5.7: ผลการทดสอบการดูรายการสุนัขของตน (Dog List)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="3">ทดสอบการดูรายการสุนัข</td>
+    <td>ผู้ใช้ทั่วไปเข้าหน้ารายการสุนัข (GET /dog-list/)</td>
+    <td>ระบบแสดงเฉพาะสุนัขที่เป็นของผู้ใช้คนนั้น <span class="p">ผ่าน</span></td></tr>
+<tr><td>Admin เข้าหน้ารายการสุนัข</td>
+    <td>ระบบแสดงสุนัขทุกตัวในระบบ (ไม่จำกัด owner) <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ยังไม่มีสุนัขในระบบเข้าหน้ารายการสุนัข</td>
+    <td>ระบบแสดงหน้าว่างพร้อมข้อความแนะนำให้เพิ่มสุนัข (has_dogs=False) <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<h2>5.2 การทดสอบระบบข่าวสาร (Notification)</h2>
+
+<!-- ===== 5.8 Notification List ===== -->
+<h3>ตารางที่ 5.8: ผลการทดสอบการดูรายการข่าวสาร (Notification Read)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="4">ทดสอบการดูรายการข่าวสาร</td>
+    <td>ผู้ใช้ทั่วไปเข้าหน้ารายการข่าวสาร</td>
+    <td>ระบบแสดงข่าวสารประเภท ACTIVITY และ LOST_DOG ที่มองเห็นได้สาธารณะ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่เป็น AdoptionParent เข้าดูรายการข่าวสาร</td>
+    <td>ระบบแสดงข่าวสาร DOG_SPECIFIC ที่เกี่ยวกับสุนัขที่ตนอุปการะด้วย <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ Org Admin เข้าดูรายการข่าวสาร</td>
+    <td>ระบบแสดงข่าวสาร DOG_SPECIFIC ของสุนัขในองค์กรทั้งหมด <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้คลิกข่าวสารเพื่อดูรายละเอียด</td>
+    <td>ระบบโหลด Modal แสดงรายละเอียดข่าวสารพร้อมปุ่มแก้ไข/ลบตามสิทธิ์ <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.9 Notification Create ===== -->
+<h3>ตารางที่ 5.9: ผลการทดสอบการสร้างข่าวสาร (Notification Create)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="4">ทดสอบการสร้างข่าวสาร</td>
+    <td>Org Admin เข้าหน้าสร้างข่าวสาร กรอกข้อมูลครบ และกดเผยแพร่</td>
+    <td>ระบบบันทึกข่าวสารโดยกำหนด organization เป็น Org Admin คนนั้น และ redirect ไปหน้ารายการ <span class="p">ผ่าน</span></td></tr>
+<tr><td>Org Admin เลือกประเภทข่าวสาร DOG_SPECIFIC แต่ไม่ระบุสุนัข และกดเผยแพร่</td>
+    <td>ระบบแสดง error "ประกาศเฉพาะสุนัข ต้องระบุสุนัขที่เกี่ยวข้อง" <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ทั่วไป (role=standard) พยายามเข้าหน้าสร้างข่าวสาร</td>
+    <td>ระบบแสดง error "คุณไม่มีสิทธิ์ในการสร้างประกาศข่าวสาร" และ redirect <span class="p">ผ่าน</span></td></tr>
+<tr><td>Org Admin แนบรูปภาพประกอบข่าวสาร และกดเผยแพร่</td>
+    <td>ระบบบันทึกรูปภาพและสร้างข่าวสารสำเร็จ <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.10 Notification Update ===== -->
+<h3>ตารางที่ 5.10: ผลการทดสอบการแก้ไขข่าวสาร (Notification Update)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="3">ทดสอบการแก้ไขข่าวสาร</td>
+    <td>เจ้าของประกาศ (organization) แก้ไขข้อมูลและกดบันทึก</td>
+    <td>ระบบบันทึกการแก้ไขและ redirect ไปหน้ารายการข่าวสาร <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ไม่ใช่เจ้าของและไม่ใช่ Admin พยายามแก้ไขประกาศของคนอื่น</td>
+    <td>ระบบแสดง error "คุณไม่มีสิทธิ์ในการแก้ไขประกาศนี้" และ redirect <span class="p">ผ่าน</span></td></tr>
+<tr><td>Admin (is_staff=True) แก้ไขประกาศของ Org Admin</td>
+    <td>ระบบอนุญาตให้แก้ไขและบันทึกได้ <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.11 Notification Delete ===== -->
+<h3>ตารางที่ 5.11: ผลการทดสอบการลบข่าวสาร (Notification Delete)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="3">ทดสอบการลบข่าวสาร</td>
+    <td>เจ้าของประกาศส่ง POST request ลบประกาศของตน</td>
+    <td>ระบบลบข่าวสารออกจากฐานข้อมูลและ redirect ไปหน้ารายการ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ไม่ใช่เจ้าของพยายามลบประกาศของคนอื่น</td>
+    <td>ระบบแสดง error "คุณไม่มีสิทธิ์ในการลบประกาศนี้" และ redirect <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ส่ง GET request ไปที่ URL ลบข่าวสาร</td>
+    <td>ระบบ redirect กลับหน้ารายการข่าวสารโดยไม่ลบ <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<h2>5.3 การทดสอบระบบโปรไฟล์ผู้ใช้</h2>
+
+<!-- ===== 5.12 Profile ===== -->
+<h3>ตารางที่ 5.12: ผลการทดสอบระบบโปรไฟล์ผู้ใช้</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="4">ทดสอบโปรไฟล์ผู้ใช้</td>
+    <td>ผู้ใช้เข้าหน้าโปรไฟล์ตนเอง (GET /profile/)</td>
+    <td>ระบบแสดงข้อมูลส่วนตัว (Username, Email, Phone, Line ID, Role) ในโหมดดูอย่างเดียว <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้เปิดโหมดแก้ไข (?edit=true) แก้ไข Phone และ Line ID แล้วกดบันทึก</td>
+    <td>ระบบอัปเดตข้อมูลและแสดงข้อความ "บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว" <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ส่ง POST ในโหมดดูอย่างเดียว (is_edit_mode=False)</td>
+    <td>ระบบไม่บันทึกการเปลี่ยนแปลงและ redirect ไปหน้าโปรไฟล์ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ยังไม่ Login พยายามเข้าหน้าโปรไฟล์</td>
+    <td>ระบบ redirect ไปหน้า Login <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<h2>5.4 การทดสอบระบบแผนที่สุนัขสูญหาย</h2>
+
+<!-- ===== 5.13 Map ===== -->
+<h3>ตารางที่ 5.13: ผลการทดสอบระบบแผนที่สุนัขสูญหาย</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="4">ทดสอบแผนที่สุนัขสูญหาย</td>
+    <td>ผู้ใช้ที่ Login แล้วเข้าหน้าแผนที่สุนัขสูญหาย</td>
+    <td>ระบบแสดงหน้าแผนที่พร้อม Widget แผนที่ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ระบบโหลดข้อมูล API สุนัขสูญหาย (/lost-dogs-map-data/)</td>
+    <td>ระบบส่ง JSON ที่มีข้อมูล id, name, lat, lng, image_url, detail_url ของสุนัขที่สูญหายทุกตัว <span class="p">ผ่าน</span></td></tr>
+<tr><td>เจ้าของสุนัขกดปุ่ม "แจ้งสุนัขสูญหาย" และปักหมุดตำแหน่งบนแผนที่</td>
+    <td>ระบบบันทึก lost_latitude, lost_longitude และตั้ง is_lost=True พร้อมแสดงข้อความสำเร็จ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ไม่ใช่เจ้าของสุนัขพยายามแจ้งสูญหายสุนัขของคนอื่น</td>
+    <td>ระบบแสดง error "คุณไม่มีสิทธิ์ในการแจ้งสูญหายสุนัขตัวนี้" และ redirect <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<h2>5.5 การทดสอบระบบค้นหาสุนัขด้วย AI (Matchdog)</h2>
+
+<!-- ===== 5.14 Matchdog ===== -->
+<h3>ตารางที่ 5.14: ผลการทดสอบระบบค้นหาสุนัขด้วย AI</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="4">ทดสอบการค้นหาสุนัขด้วย AI</td>
+    <td>ผู้ใช้เข้าหน้า Matchdog (GET /matchdog/)</td>
+    <td>ระบบแสดงหน้า Dropzone สำหรับอัปโหลดรูปภาพเพื่อค้นหา <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้อัปโหลดรูปภาพสุนัขที่ชัดเจน และกดค้นหา</td>
+    <td>ระบบส่งรูปไปยัง AI API แล้วแสดงผลลัพธ์สุนัขที่คล้ายกันพร้อมคะแนน similarity <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ส่ง POST request โดยไม่แนบรูปภาพ</td>
+    <td>ระบบแสดงหน้า Matchdog ใหม่โดยไม่มีผลลัพธ์ (ไม่ crash) <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ยังไม่ Login พยายามเข้าหน้า Matchdog</td>
+    <td>ระบบ redirect ไปหน้า Login <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<h2>5.6 การทดสอบระบบขออุปการะสุนัข (Adoption)</h2>
+
+<!-- ===== 5.15 Request Adoption ===== -->
+<h3>ตารางที่ 5.15: ผลการทดสอบการส่งคำขออุปการะสุนัข</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="4">ทดสอบการส่งคำขออุปการะ</td>
+    <td>ผู้ใช้กดส่งคำขออุปการะสุนัขจากหน้า dog_detail (POST) พร้อมระบุเหตุผล</td>
+    <td>ระบบสร้าง AdoptionRequest ใหม่ แสดงข้อความ "ส่งคำขออุปการะสำเร็จ" และ redirect <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่เคยส่งคำขอแล้ว (status=PENDING) พยายามส่งคำขออีกครั้งสำหรับสุนัขตัวเดียวกัน</td>
+    <td>ระบบแสดง warning "คุณได้ส่งคำขออุปการะสุนัขตัวนี้ไปแล้ว กรุณารอการตรวจสอบ" <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ที่ยังไม่ Login พยายามส่งคำขออุปการะ</td>
+    <td>ระบบ redirect ไปหน้า Login <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ส่ง GET request ไปที่ URL ขออุปการะ (ไม่ผ่าน POST)</td>
+    <td>ระบบ redirect กลับหน้า dog_detail โดยไม่สร้าง AdoptionRequest <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<!-- ===== 5.16 Adoption List & Handle ===== -->
+<h3>ตารางที่ 5.16: ผลการทดสอบการจัดการคำขออุปการะ (Org Admin)</h3>
+<div class="wrap"><table>
+<thead><tr><th width="22%">การทดสอบ</th><th width="46%">เงื่อนไขในการทดสอบ</th><th width="32%">ผลการทดสอบ</th></tr></thead>
+<tbody>
+<tr><td class="gl" rowspan="5">ทดสอบการจัดการคำขออุปการะ</td>
+    <td>Org Admin เข้าหน้ารายการคำขออุปการะ</td>
+    <td>ระบบแสดงคำขอ (status=PENDING) ของสุนัขในองค์กรเท่านั้น <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ทั่วไปพยายามเข้าหน้ารายการคำขออุปการะ</td>
+    <td>ระบบแสดง error "คุณไม่มีสิทธิ์เข้าถึงหน้านี้" และ redirect ไปหน้า Home <span class="p">ผ่าน</span></td></tr>
+<tr><td>Org Admin กดอนุมัติ (action=approve) คำขออุปการะ</td>
+    <td>ระบบเปลี่ยน status เป็น APPROVED, สร้าง AdoptionParent และส่ง Notification แจ้งผู้ใช้ <span class="p">ผ่าน</span></td></tr>
+<tr><td>Org Admin กดปฏิเสธ (action=reject) คำขออุปการะ</td>
+    <td>ระบบเปลี่ยน status เป็น REJECTED และ redirect ไปหน้ารายการคำขอ <span class="p">ผ่าน</span></td></tr>
+<tr><td>ผู้ใช้ทั่วไปพยายามส่ง request เพื่ออนุมัติ/ปฏิเสธคำขอ</td>
+    <td>ระบบแสดง error "คุณไม่มีสิทธิ์ดำเนินการ" และ redirect <span class="p">ผ่าน</span></td></tr>
+</tbody>
+</table></div>
+
+<hr>
+<p style="text-align:center;color:#555;font-size:13pt;">&copy; FindMyDog — เอกสารบทที่ 5 การทดสอบระบบ</p>
+</body>
+</html>

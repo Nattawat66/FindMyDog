@@ -67,7 +67,7 @@ urlpatterns = [
     # API endpoint for CPU stats
     path('api/cpu-stats/', views_admin.get_cpu_stats, name='get_cpu_stats'),
     # path('trainKNN/', views.trigger_train_knn, name='trainKNN')
-    path("api/server-time/", views.server_time),
+    # path("api/server-time/", views.server_time),
 
 
 ]
