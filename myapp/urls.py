@@ -7,53 +7,52 @@ from . import views_admin
 
 urlpatterns = [
     path("", views.home, name="home"),
-    path("home/", views.home, name="home"),
-    path("register/", views.register, name="register"),
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path("login/", views.login, name="login"),
-    path('admin_page/user/<int:user_id>/update_role/', views_admin.admin_update_user_role, name='admin_update_user_role'),
-    path('admin_page/user/<int:user_id>/delete/', views_admin.admin_delete_user, name='admin_delete_user'),
-    path('admin_page/dog/<int:dog_id>/delete/', views_admin.admin_delete_dog, name='admin_delete_dog'),
-    
-    path('dog/register/', views.register_dog_page, name='register_dog_page'),
-    path('dogs/', views.dog_list, name='dog_list'),
-    path('dogsall/', views.dog_all_list, name='dog_all_list'),
-    path('dogs/<int:dog_id>/', views.dog_detail, name='dog_detail'),
-    path('notifications/', views.notification_list_view, name='notification_list'),
-    path('notifications/create/', views.create_notification_view, name='create_notification'),
-    path('notifications/<int:notification_id>/detail_hx/', views.notification_detail_hx_view, name='notification_detail_hx'),
-    path('notifications/<int:notification_id>/edit/', views.edit_notification_view, name='edit_notification'),
-    path('notifications/<int:notification_id>/delete/', views.delete_notification_view, name='delete_notification'),
-    path('dogs/<int:dog_id>/delete/', views.delete_dog_page, name='delete_dog_page'),
-    path('profile/',views.user_profile_view,name='user_profile'),
+    path("home/", views.home, name="home"), #SQ
+    path("register/", views.register, name="register"), # SQ
+    path('logout/', LogoutView.as_view(), name='logout'), # SQ
+    path("login/", views.login, name="login"), # SQ
+    path('admin_page/user/<int:user_id>/update_role/', views_admin.admin_update_user_role, name='admin_update_user_role'), # SQ
+    path('admin_page/user/<int:user_id>/delete/', views_admin.admin_delete_user, name='admin_delete_user'), # SQ
+    path('admin_page/dog/<int:dog_id>/delete/', views_admin.admin_delete_dog, name='admin_delete_dog'), # SQ
+    path('dog/register/', views.register_dog_page, name='register_dog_page'), # SQ
+    path('dogs/', views.dog_list, name='dog_list'), # SQ
+    path('dogsall/', views.dog_all_list, name='dog_all_list'), #SQ
+    path('dogs/<int:dog_id>/', views.dog_detail, name='dog_detail'), #SQ
+    path('notifications/', views.notification_list_view, name='notification_list'), #SQ
+    path('notifications/create/', views.create_notification_view, name='create_notification'), #SQ
+    path('notifications/<int:notification_id>/detail_hx/', views.notification_detail_hx_view, name='notification_detail_hx'), #SQ
+    path('notifications/<int:notification_id>/edit/', views.edit_notification_view, name='edit_notification'), #SQ
+    path('notifications/<int:notification_id>/delete/', views.delete_notification_view, name='delete_notification'), #SQ
+    path('dogs/<int:dog_id>/delete/', views.delete_dog_page, name='delete_dog_page'), #SQ
+    path('profile/',views.user_profile_view,name='user_profile'), #SQ
 
     #URL สำหรับ JSON Map Data (Backend API)
-    path('api/lost_dogs/map_data/', views.lost_dogs_map_data, name='lost_dogs_map_data_api'),
+    # path('api/lost_dogs/map_data/', views.lost_dogs_map_data, name='lost_dogs_map_data_api'), #SQ
     #URL สำหรับหน้าแผนที่
     path(
         'lost_dogs/map/', 
         views.lost_dogs_map_view, 
-        name='lost_dogs_map_view'
+        name='lost_dogs_map_view' #SQ
     ),
     path(
         'dog/<int:dog_id>/report_lost/map/', 
         views.report_lost_dog_view, 
-        name='report_lost_dog'
+        name='report_lost_dog' #SQ
     ),
     path(
         'api/lost_dogs/map_data/', 
         views.lost_dogs_map_data, 
-        name='lost_dogs_map_data_api'
+        name='lost_dogs_map_data_api' #SQ
     ),
-    path('matchdog/', views.matchdog, name='matchdog'),
+    path('matchdog/', views.matchdog, name='matchdog'), #SQ
+    path('dogs/<int:dog_id>/request_adoption/', views_admin.request_adoption_view, name='request_adoption'), #SQ
+    path('adoption_requests/', views_admin.adoption_request_list_view, name='adoption_request_list'), #SQ
+    path('adoption_requests/<int:request_id>/<str:action>/', views_admin.handle_adoption_request_view, name='handle_adoption_request'), #SQ
 
     # URL สำหรับเกี่ยวกับจัดการ model-----------------------------------------------------------
     path('admin_page/', views_admin.admin_page, name='admin_page'),
     path('SetautoTraining/', views_admin.set_auto_training, name='set_auto_training'),
     path('model/retrain/', views_admin.set_time_auto_training, name='retrain_model'),
-    path('dogs/<int:dog_id>/request_adoption/', views_admin.request_adoption_view, name='request_adoption'),
-    path('adoption_requests/', views_admin.adoption_request_list_view, name='adoption_request_list'),
-    path('adoption_requests/<int:request_id>/<str:action>/', views_admin.handle_adoption_request_view, name='handle_adoption_request'),
     path('page/testEMBmodel/', views_admin.page_testEMBmodel, name='testEMBmodel'),
     path('train-knn/', views_admin.train_knn_view, name='train_knn'),
     path('history-knn/', views_admin.knn_test_history_view, name='history_knn'),
